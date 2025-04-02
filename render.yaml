@@ -2,7 +2,7 @@ services:
   - type: web
     name: my-flower-app
     env: node
-    buildCommand: cd client && npm install && npm run build && cd .. && npm install
+    buildCommand: cd flower0 && npm install && npm run build && cd .. && npm install
     startCommand: node ./bin/www
     envVars:
       - key: NODE_VERSION
