@@ -30,13 +30,13 @@ app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
 
 
-app.use(express.static(path.join(__dirname, '../client/build')));
+const path = require("path");
+app.use(express.static(path.join(__dirname, "../flower0/build")));
 
-// 若無其他路由符合，導向 React index.html
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/build/index.html'));
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../flower0/build/index.html"));
 });
-// 設定靜態檔案路徑
+
 
 
 
