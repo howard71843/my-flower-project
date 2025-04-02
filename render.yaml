@@ -3,7 +3,7 @@ services:
     name: my-flower-app
     env: node
     buildCommand: cd flower0 && npm install && npm run build && cd ../flower0express && npm install
-    startCommand: node ./bin/www
+    startCommand: node ./flower0express/bin/www
     envVars:
       - key: NODE_VERSION
         value: 18
