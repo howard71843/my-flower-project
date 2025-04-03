@@ -1,0 +1,51 @@
+/*login.css*/
+.bg {
+    
+    background-image: url('./background.jpg'); /* 使用背景圖片 */
+    height: 100vh;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+    
+    .login-container {
+      text-align: center;
+      background: rgba(255, 255, 255, 0.9); /* 半透明背景 */
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      width: 300px; /* 固定寬度 */
+    }
+    
+    .logo {
+      width: 100px;
+      margin-bottom: 20px;
+    }
+    
+    input {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      width: 80%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    
+    button {
+      background-color: #4a90e2; /* 改成藍色 */
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px; /* 提高字體大小 */
+    }
+    
+    button:hover {
+      background-color: #3a7dd8; /* 當滑過時變深 */
+    }
+    

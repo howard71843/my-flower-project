@@ -1,0 +1,159 @@
+.App {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; 
+
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+
+/*上方title配色*/
+.title-bar {
+  background-color: #ffebcc; /* 柔和橘色背景 */
+  width: 100%;  /* 確保容器撐滿 */
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+
+
+
+/* 📸 Webcam 容器 */
+.webcam-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #EDE5C5; /* 讓背景有一致的淡黃色 */
+  padding: 20px;
+  border-radius: 15px;
+  width: 400px; /* 固定寬度 */
+  margin-top: 60px; /* 與上方的距離 */ 
+}
+
+
+
+/* 🎥 攝影機 */
+.webcam {
+  width: 350px;
+  height: 300px;
+  border-radius: 10px;
+  border: 2px solid black;
+  margin-top: 30px; /* 與上方的距離 */
+  border: none; /* ✅ 移除黑框 */
+}
+
+
+
+.button-container {
+  display: flex;
+  justify-content: center; /* 🔹 讓按鈕們水平排列 */
+  gap:50px; /* 🔹 按鈕之間的間距 */
+  margin-top: 15px;
+}
+
+/* 返回按鈕 */
+.back-btn { 
+  font-size: 40px; /* Emoji 放大 */
+  background-color: transparent; /* 移除背景色 */
+  border: none; /* ✅ 移除黑框 */
+
+}
+
+
+/* 📷 相機按鈕 沒影響*/  
+  
+.icon-btn {
+  background-color: #4CAF50;
+  border: none;
+  color: white;
+  padding: 20px; /* 增大按鈕尺寸 */
+  text-align: center;
+  text-decoration: none;
+  font-size: 18px;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* 增加按鈕陰影 */
+}
+
+/* 🔗分享按鈕 */
+.share-btn { 
+  font-size: 40px; /* 📷 Emoji 放大 */
+  background-color: transparent; /* 移除背景色 */
+  border: none; /* ✅ 移除黑框 */
+
+}
+
+/* 🔗分享按鈕 */
+.popup {
+  position: fixed;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  background-color: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  animation: popup-fadein 0.3s ease;
+  text-align: center;
+}
+
+.popup.success {
+  border: 3px solid #4CAF50;
+  color: #4CAF50;
+}
+
+.popup.fail {
+  border: 3px solid #f44336;
+  color: #f44336;
+}
+
+.popup-content button {
+  margin-top: 15px;
+  padding: 6px 12px;
+  font-size: 16px;
+  background-color: #eee;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+@keyframes popup-fadein {
+  from { opacity: 0; transform: translate(-50%, -60%); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+
