@@ -31,8 +31,13 @@ app.use(cookieParser());
 
 
 // 設定靜態檔案路徑
+// 1️⃣ 設定 API 路由先處理
+app.use('/api', apiRouter);
+
+// 2️⃣ 再提供 React 靜態檔
 app.use(express.static(path.join(__dirname, "../flower0/build")));
 
+// 3️⃣ 所有未知路由導向 React
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../flower0/build/index.html"));
 });
