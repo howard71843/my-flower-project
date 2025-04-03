@@ -30,7 +30,7 @@ app.use(cookieParser());
 //app.use(express.static(path.join(__dirname, 'public')));
 
 
-const path = require("path");
+// 設定靜態檔案路徑
 app.use(express.static(path.join(__dirname, "../flower0/build")));
 
 app.get("*", (req, res) => {
