@@ -46,7 +46,7 @@ const Main = () => {
     useEffect(() => {
         const fetchResult = async () => {
             try {
-                const response = await fetch("http://localhost:3000/api/getResult");
+                const response = await fetch(`${window.location.origin}/api/getResult`);   // 根據當前網址決定呼叫位置  而本地"http://localhost:3000/api/getResult"
                 const data = await response.json();
                 console.log("🌐 從後端獲取的訊息：", data.message);
                 const targetFlower = localStorage.getItem("targetFlower"); // 新增這行
