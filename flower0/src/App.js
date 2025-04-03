@@ -84,7 +84,7 @@ function App() {
           setShowPopup(true);
 
             // 🔹 存入後端
-            await fetch("http://localhost:3000/api/setResult", {
+            await fetch(`${window.location.origin}/api/getResult`, {  // 根據當前網址決定呼叫位置  而本地"http://localhost:3000/api/getResult"
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: data.result, target: targetFlower }),
