@@ -65,7 +65,7 @@ function App() {
     setResponse("");
 
     try {
-        const response = await fetch("http://localhost:3000/api/analyzeImage", {
+        const response = await fetch(`${window.location.origin}/api/analyzeImage`, { // 根據當前網址決定呼叫位置  而本地"http://localhost:3000/api/analyzeImage"
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ image }),
