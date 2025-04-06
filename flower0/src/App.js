@@ -128,7 +128,16 @@ function App() {
           <div className="button-container">  
             <button className="back-btn" onClick={() => navigate("/main")}>🔙 </button>
             <button className="icon-btn" onClick={capturePhoto}><FontAwesomeIcon icon={faCamera} size="2x" /></button>
-            <button className="icon-btn" onClick={capturePhoto}>🔗</button>
+            <button className="icon-btn" onClick={() => { if (!image) return;   
+              const link = document.createElement("a");
+              link.href = image;
+              link.download = "flower-capture.png";
+              link.click();
+            }}
+          >
+            ⬇️
+          </button>
+
           </div>
        </div>
 

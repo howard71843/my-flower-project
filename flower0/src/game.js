@@ -343,14 +343,16 @@ useEffect(() => {
   };
 
   // 添加事件監聽器
-  document.addEventListener("touchmove", handleTouchMove, { passive: false });
+  whiteBoxRef.current?.addEventListener("touchmove", handleTouchMove, { passive: false }); // 被動模式，避免滾動
+  // document.addEventListener("touchmove", handleTouchMove, { passive: false });  被動模式，避免滾動
   document.addEventListener("touchend", handleTouchEnd);
   document.addEventListener("mousemove", handleMouseMove);
   document.addEventListener("mouseup", handleMouseUp);
 
   // 清理事件監聽器
   return () => {
-    document.removeEventListener("touchmove", handleTouchMove);
+    whiteBoxRef.current?.removeEventListener("touchmove", handleTouchMove); // 被動模式，避免滾動
+    //document.removeEventListener("touchmove", handleTouchMove);  被動模式，避免滾動
     document.removeEventListener("touchend", handleTouchEnd);
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
