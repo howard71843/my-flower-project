@@ -124,7 +124,7 @@ function App() {
 
         {/* 相機視訊串流 */}
         <div className="webcam-container">
-          <Webcam ref={webcamRef} screenshotFormat="image/png" className="webcam" />
+          <Webcam ref={webcamRef} screenshotFormat="image/png" className="webcam"   videoConstraints={{ facingMode: "environment",}} />   
           <div className="button-container">  
             <button className="back-btn" onClick={() => navigate("/main")}>🔙 </button>
             <button className="icon-btn" onClick={capturePhoto}><FontAwesomeIcon icon={faCamera} size="2x" /></button>
