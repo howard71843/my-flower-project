@@ -319,45 +319,53 @@ const handleDelete = (id) => {
 //拖曳花圖 ＋ 縮放處理（圖片用）+ 旋轉處理
 useEffect(() => {
   const handleTouchMove = (event) => {
-    event.preventDefault(); // 阻止觸控滾動
-    handleDragMove(event);   // 花圖移動
-    handleResizeMove(event); // 花圖縮放
-    handleRotateMove(event); // 花圖旋轉
+    // Check if any interaction (drag, resize, rotate) is active
+    const isInteracting = draggingImage || resizeData || rotateData;
+
+    if (isInteracting) {
+      // If interacting with a flower, prevent default scroll behavior
+      event.preventDefault();
+      // Then handle the specific interaction
+      if (draggingImage) handleDragMove(event);
+      if (resizeData) handleResizeMove(event);
+      if (rotateData) handleRotateMove(event);
+    }
+    // If NOT interacting (isInteracting is false), we DON'T call preventDefault.
+    // This allows the default browser behavior (like scrolling) to happen.
+    // We also don't need to call the move handlers in this case.
   };
 
   const handleMouseMove = (event) => {
-    handleDragMove(event);
-    handleResizeMove(event);
-    handleRotateMove(event);
+    // Mouse move doesn't usually cause page scroll in the same way,
+    // so preventDefault isn't strictly necessary here for scrolling,
+    // but it doesn't hurt to keep the structure consistent if needed for other default behaviors.
+    // The internal checks within handle*Move functions are sufficient.
+    if (draggingImage) handleDragMove(event);
+    if (resizeData) handleResizeMove(event);
+    if (rotateData) handleRotateMove(event);
   };
 
-  const handleMouseUp = () => {
+  const handleEnd = () => { // Combined end handler for touch and mouse
     handleDragEnd();
     handleResizeEnd();
     handleRotateEnd();
   };
 
-  const handleTouchEnd = () => {
-    handleDragEnd();
-    handleResizeEnd();
-    handleRotateEnd();
-  };
-
-  // 添加事件監聽器
-  //whiteBoxRef.current?.addEventListener("touchmove", handleTouchMove, { passive: false }); // 被動模式，避免滾動
-  document.addEventListener("touchmove", handleTouchMove, { passive: false });   document.addEventListener("touchend", handleTouchEnd);
+  // Add event listeners
+  // Ensure passive: false is ONLY used for touchmove where we might preventDefault
+  document.addEventListener("touchmove", handleTouchMove, { passive: false });
+  document.addEventListener("touchend", handleEnd);
   document.addEventListener("mousemove", handleMouseMove);
-  document.addEventListener("mouseup", handleMouseUp);
+  document.addEventListener("mouseup", handleEnd);
 
-  // 清理事件監聽器
+  // Clean up event listeners
   return () => {
-    //whiteBoxRef.current?.removeEventListener("touchmove", handleTouchMove); // 被動模式，避免滾動
-    document.removeEventListener("touchmove", handleTouchMove);      document.removeEventListener("touchend", handleTouchEnd);
+    document.removeEventListener("touchmove", handleTouchMove);
+    document.removeEventListener("touchend", handleEnd);
     document.removeEventListener("mousemove", handleMouseMove);
-    document.removeEventListener("mouseup", handleMouseUp);
+    document.removeEventListener("mouseup", handleEnd);
   };
-}, [draggingImage, resizeData, rotateData]); // 依賴項增加 rotateData
-
+}, [draggingImage, resizeData, rotateData, handleDragMove, handleResizeMove, handleRotateMove, handleDragEnd, handleResizeEnd, handleRotateEnd]); // Add handlers to dependency array if they aren't stable references (defined outside useEffect or using useCallback)
 
 //拖曳文字處理（step 4 文字）
 useEffect(() => {
