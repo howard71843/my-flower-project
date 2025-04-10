@@ -322,12 +322,18 @@ const handleDelete = (id) => {
 //拖曳花圖 ＋ 縮放處理（圖片用）+ 旋轉處理
 useEffect(() => {
   const handleTouchMove = (event) => {
-    if (isDraggingImage || resizeData || rotateData) {
-      event.preventDefault(); // ✅ 只有在操作時阻止滾動
+    if (isDraggingImage) {
+      event.preventDefault(); // ✅ 僅在拖曳花朵時禁止滾動
     }
     handleDragMove(event);
     handleResizeMove(event);
     handleRotateMove(event);
+  };
+
+  const handleTouchEnd = () => {
+    handleDragEnd();
+    handleResizeEnd();
+    handleRotateEnd();
   };
 
   const handleMouseMove = (event) => {
@@ -337,12 +343,6 @@ useEffect(() => {
   };
 
   const handleMouseUp = () => {
-    handleDragEnd();
-    handleResizeEnd();
-    handleRotateEnd();
-  };
-
-  const handleTouchEnd = () => {
     handleDragEnd();
     handleResizeEnd();
     handleRotateEnd();
@@ -364,7 +364,7 @@ useEffect(() => {
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   };
-}, [draggingImage, resizeData, rotateData, isDraggingImage]); // 依賴項增加 rotateData
+}, [isDraggingImage, resizeData, rotateData]); // 依賴項增加 rotateData
 
 
 //拖曳文字處理（step 4 文字）
