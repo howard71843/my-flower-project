@@ -237,6 +237,10 @@
   border: 1px solid #ccc;
   z-index: 1;
   overflow: hidden;
+  overflow: auto;           /* ✅ 讓這區可以滑動 */
+  touch-action: none;       /* ✅ 禁止預設觸控事件（更安全） */
+  -webkit-overflow-scrolling: touch; /* ✅ iOS 平滑滾動 */
+
 }
 
 /* 置中請點擊下方黑色區塊上傳照片這段話 */
