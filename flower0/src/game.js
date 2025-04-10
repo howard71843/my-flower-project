@@ -18,6 +18,7 @@ function Game() {
   const [selectedFont, setSelectedFont] = useState("cursive");  // 字體選擇的狀態
   const [textPosition, setTextPosition] = useState({ top: 240, left: 100 }); // 文字的位置
   const [draggingText, setDraggingText] = useState(false);  // 是否正在拖曳文字
+  
 
 
   const [rotateData, setRotateData] = useState(null); // 儲存旋轉操作的相關數據
@@ -100,8 +101,6 @@ const handleWhiteBoxClick = (event) => {
   }
 };
 
-const [isDraggingImage, setIsDraggingImage] = useState(false); // 是否正在拖曳圖片
-
 //拖曳圖片
 const handleDragStart = (id, event) => {   
  //event.preventDefault();                  // 阻止默認拖曳行為
@@ -114,7 +113,6 @@ const handleDragStart = (id, event) => {
     startX,
     startY,
   });
-  setIsDraggingImage(true); // ✅ 設定拖曳中
 };
 
  //拖曳圖片
@@ -154,7 +152,6 @@ const handleDragMove = (event) => {  // 拖曳移動的處理函數
 const handleDragEnd = () => {       // 拖曳結束
   setDraggingImage(null);
   console.log("✅ handleDragEnd");
-  setIsDraggingImage(false); // ✅ 拖曳結束
 };
 
 
@@ -322,18 +319,10 @@ const handleDelete = (id) => {
 //拖曳花圖 ＋ 縮放處理（圖片用）+ 旋轉處理
 useEffect(() => {
   const handleTouchMove = (event) => {
-    if (isDraggingImage) {
-      event.preventDefault(); // ✅ 僅在拖曳花朵時禁止滾動
-    }
-    handleDragMove(event);
-    handleResizeMove(event);
-    handleRotateMove(event);
-  };
-
-  const handleTouchEnd = () => {
-    handleDragEnd();
-    handleResizeEnd();
-    handleRotateEnd();
+    event.preventDefault(); // 阻止觸控滾動
+    handleDragMove(event);   // 花圖移動
+    handleResizeMove(event); // 花圖縮放
+    handleRotateMove(event); // 花圖旋轉
   };
 
   const handleMouseMove = (event) => {
@@ -348,23 +337,26 @@ useEffect(() => {
     handleRotateEnd();
   };
 
-  const box = whiteBoxRef.current;
-  if (box) {
-    box.addEventListener("touchmove", handleTouchMove, { passive: false });
-  }
-  document.addEventListener("touchend", handleTouchEnd);
+  const handleTouchEnd = () => {
+    handleDragEnd();
+    handleResizeEnd();
+    handleRotateEnd();
+  };
+
+  // 添加事件監聽器
+  //whiteBoxRef.current?.addEventListener("touchmove", handleTouchMove, { passive: false }); // 被動模式，避免滾動
+  document.addEventListener("touchmove", handleTouchMove, { passive: false });   document.addEventListener("touchend", handleTouchEnd);
   document.addEventListener("mousemove", handleMouseMove);
   document.addEventListener("mouseup", handleMouseUp);
 
+  // 清理事件監聽器
   return () => {
-    if (box) {
-      box.removeEventListener("touchmove", handleTouchMove);
-    }
-    document.removeEventListener("touchend", handleTouchEnd);
+    //whiteBoxRef.current?.removeEventListener("touchmove", handleTouchMove); // 被動模式，避免滾動
+    document.removeEventListener("touchmove", handleTouchMove);      document.removeEventListener("touchend", handleTouchEnd);
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   };
-}, [isDraggingImage, resizeData, rotateData]); // 依賴項增加 rotateData
+}, [draggingImage, resizeData, rotateData]); // 依賴項增加 rotateData
 
 
 //拖曳文字處理（step 4 文字）
