@@ -100,6 +100,8 @@ const handleWhiteBoxClick = (event) => {
   }
 };
 
+const [isDraggingImage, setIsDraggingImage] = useState(false); // 是否正在拖曳圖片
+
 //拖曳圖片
 const handleDragStart = (id, event) => {   
  //event.preventDefault();                  // 阻止默認拖曳行為
@@ -112,6 +114,7 @@ const handleDragStart = (id, event) => {
     startX,
     startY,
   });
+  setIsDraggingImage(true); // ✅ 設定拖曳中
 };
 
  //拖曳圖片
@@ -151,6 +154,7 @@ const handleDragMove = (event) => {  // 拖曳移動的處理函數
 const handleDragEnd = () => {       // 拖曳結束
   setDraggingImage(null);
   console.log("✅ handleDragEnd");
+  setIsDraggingImage(false); // ✅ 拖曳結束
 };
 
 
@@ -318,10 +322,12 @@ const handleDelete = (id) => {
 //拖曳花圖 ＋ 縮放處理（圖片用）+ 旋轉處理
 useEffect(() => {
   const handleTouchMove = (event) => {
-    event.preventDefault(); // 阻止觸控滾動
-    handleDragMove(event);   // 花圖移動
-    handleResizeMove(event); // 花圖縮放
-    handleRotateMove(event); // 花圖旋轉
+    if (isDraggingImage || resizeData || rotateData) {
+      event.preventDefault(); // ✅ 只有在操作時阻止滾動
+    }
+    handleDragMove(event);
+    handleResizeMove(event);
+    handleRotateMove(event);
   };
 
   const handleMouseMove = (event) => {
@@ -342,22 +348,23 @@ useEffect(() => {
     handleRotateEnd();
   };
 
-  // 添加事件監聽器
-  whiteBoxRef.current?.addEventListener("touchmove", handleTouchMove, { passive: false }); // 被動模式，避免滾動
-  // document.addEventListener("touchmove", handleTouchMove, { passive: false });  被動模式，避免滾動
+  const box = whiteBoxRef.current;
+  if (box) {
+    box.addEventListener("touchmove", handleTouchMove, { passive: false });
+  }
   document.addEventListener("touchend", handleTouchEnd);
   document.addEventListener("mousemove", handleMouseMove);
   document.addEventListener("mouseup", handleMouseUp);
 
-  // 清理事件監聽器
   return () => {
-    whiteBoxRef.current?.removeEventListener("touchmove", handleTouchMove); // 被動模式，避免滾動
-    //document.removeEventListener("touchmove", handleTouchMove);  被動模式，避免滾動
+    if (box) {
+      box.removeEventListener("touchmove", handleTouchMove);
+    }
     document.removeEventListener("touchend", handleTouchEnd);
     document.removeEventListener("mousemove", handleMouseMove);
     document.removeEventListener("mouseup", handleMouseUp);
   };
-}, [draggingImage, resizeData, rotateData]); // 依賴項增加 rotateData
+}, [draggingImage, resizeData, rotateData, isDraggingImage]); // 依賴項增加 rotateData
 
 
 //拖曳文字處理（step 4 文字）
