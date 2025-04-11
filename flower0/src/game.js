@@ -372,18 +372,37 @@ useEffect(() => {
     const handleMove = (e) => {
       if (!draggingText) return;
 
+       // Check if it's a touch event and prevent default scroll behavior
+       if (e.touches) {
+        // Prevent background scrolling ONLY when dragging text via touch
+        e.preventDefault();
+      }
+
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
-      setTextPosition((prev) => ({
-        ...prev,
-        left: clientX - prev.offsetX,
-        top: clientY - prev.offsetY,
-      }));
+       // Update text position based on the drag offset captured in onMouseDown/onTouchStart
+       setTextPosition((prev) => {
+        // Ensure offsetX and offsetY exist before using them
+        const currentOffsetX = prev.offsetX || 0;
+        const currentOffsetY = prev.offsetY || 0;
+        return {
+          ...prev,
+          left: clientX - currentOffsetX,
+          top: clientY - currentOffsetY,
+        };
+      });
     };
 
     const handleUp = () => {
-      setDraggingText(false);
+      // Stop dragging on mouse up or touch end
+      // Check draggingText state before setting it to avoid unnecessary re-renders
+      if (draggingText) {
+          setDraggingText(false);
+          // Optional: Clear offset stored in state if needed,
+          // though it gets reset on the next drag start anyway.
+          // setTextPosition(prev => ({ ...prev, offsetX: undefined, offsetY: undefined }));
+      }
     };
 
     document.addEventListener("mousemove", handleMove);
@@ -718,21 +737,22 @@ useEffect(() => {
             {/* 使用者輸入文字 */}
             <div
               onMouseDown={(e) => {
+                e.preventDefault();
                 setDraggingText(true);
-                setTextPosition({
-                  ...textPosition,
-                  offsetX: e.clientX - textPosition.left,
-                  offsetY: e.clientY - textPosition.top,
-                });
+                setTextPosition((prev) => ({
+                  ...prev,
+                  offsetX: e.clientX - prev.left,
+                  offsetY: e.clientY - prev.top,
+                }));
               }}
               onTouchStart={(e) => {
                 const touch = e.touches[0];
                 setDraggingText(true);
-                setTextPosition({
-                  ...textPosition,
-                  offsetX: touch.clientX - textPosition.left,
-                  offsetY: touch.clientY - textPosition.top,
-                });
+                setTextPosition((prev) => ({
+                  ...prev,
+                  offsetX: touch.clientX - prev.left,
+                  offsetY: touch.clientY - prev.top,
+                }));
               }}
               style={{
                 position: "absolute",
