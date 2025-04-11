@@ -418,6 +418,105 @@ useEffect(() => {
     };
   }, [draggingText]);
 
+  const handleDownloadOrShare = async () => {
+  const finalCardElement = document.getElementById("final-card");
+  if (!finalCardElement) {
+    console.error("Final card element not found");
+    alert("無法找到明信片元素，下載失敗。");
+    return;
+  }
+
+  try {
+    // Add a temporary loading indicator maybe? (Optional)
+    // e.g., setButtonLoading(true);
+
+    const canvas = await html2canvas(finalCardElement, {
+      // Options to potentially improve quality or handle rendering issues
+      useCORS: true, // Important if images are from other origins
+      allowTaint: true, // May be needed depending on image sources
+      // scale: window.devicePixelRatio || 1, // Capture at device resolution
+    });
+
+    // --- Attempt to use Web Share API first ---
+    // Check if both share and canShare are supported
+    if (navigator.share && navigator.canShare) {
+      // canvas.toBlob is asynchronous, returns a Promise or uses a callback
+      canvas.toBlob(async (blob) => {
+        if (!blob) {
+          console.error("Canvas to Blob conversion failed.");
+          alert("圖片轉換失敗，請使用傳統下載方式。");
+          // Fallback to download link if blob creation fails
+          triggerDownload(canvas);
+          return;
+        }
+
+        const file = new File([blob], "postcard.png", { type: "image/png" });
+        const shareData = {
+          files: [file],
+          title: "我的花間漫遊明信片", // Optional: Title for the share sheet
+          text: "看看我製作的明信片！", // Optional: Text accompanying the share
+        };
+
+        // Check if the browser thinks it CAN share this specific data
+        if (navigator.canShare(shareData)) {
+          try {
+            await navigator.share(shareData);
+            console.log("圖片分享成功！");
+            // Optional: Show a success message to the user
+          } catch (error) {
+            // Handle errors (e.g., user cancels the share sheet)
+            // AbortError is common if the user cancels
+            if (error.name !== 'AbortError') {
+              console.error("分享失敗:", error);
+              alert(`分享失敗：${error.message}\n\n將嘗試使用傳統下載方式。`);
+              // Fallback to download if sharing fails for other reasons
+              triggerDownload(canvas);
+            } else {
+              console.log("使用者取消分享。");
+            }
+          }
+        } else {
+          // If canShare returns false for the specific data
+          console.log("瀏覽器無法分享此檔案類型，使用傳統下載。");
+          triggerDownload(canvas);
+        }
+        // Reset loading indicator here if needed
+        // e.g., setButtonLoading(false);
+
+      }, "image/png"); // Specify blob type
+
+    } else {
+      // --- Fallback to standard download link method ---
+      console.log("Web Share API 不支援，使用傳統下載。");
+      triggerDownload(canvas);
+      // Reset loading indicator here if needed
+      // e.g., setButtonLoading(false);
+    }
+
+  } catch (error) {
+    console.error("截圖或處理過程中發生錯誤:", error);
+    alert(`產生明信片圖片時發生錯誤：${error.message}`);
+    // Reset loading indicator here if needed
+    // e.g., setButtonLoading(false);
+  }
+};
+
+// Helper function for the traditional download method
+const triggerDownload = (canvas) => {
+  try {
+    const link = document.createElement("a");
+    link.download = "postcard.png"; // Download filename
+    // Use PNG for better quality, especially with transparency
+    link.href = canvas.toDataURL("image/png"); // Convert canvas to PNG data URL
+    link.click();
+    // Clean up the temporary link
+    link.remove();
+  } catch (err) {
+      console.error("傳統下載失敗:", err);
+      alert(`傳統下載失敗: ${err.message}`);
+  }
+};
+
 
 
 
@@ -880,16 +979,14 @@ useEffect(() => {
             </div>
 
             <button
-              onClick={async () => {
-                const canvas = await html2canvas(document.getElementById("final-card")); // 將最終畫面轉換成圖片
-                const link = document.createElement("a");
-                link.download = "postcard.png";  // 下載的檔名
-                link.href = canvas.toDataURL();  // 轉換成圖片格式
-                link.click();
-              }}
-              style={{ padding: "10px 20px", marginTop: "10px", fontSize: "16px" }}
-            >
-              ⬇️ 下載明信片
+                // Use the new handler function here
+                onClick={handleDownloadOrShare}
+                style={{ padding: "10px 20px", marginTop: "10px", fontSize: "16px" }}
+                // Add disabled state if you implement loading (Optional)
+                // disabled={isButtonLoading}
+              >
+                {/* {isButtonLoading ? "處理中..." : "⬇️ 分享或下載明信片"} */}
+                ⬇️ 分享或下載明信片
             </button>
           </div>
         )}
