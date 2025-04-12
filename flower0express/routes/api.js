@@ -12,13 +12,28 @@ const influxToken = process.env.INFLUXDB_TOKEN || '5OHSyb94Xs86DA98VW62dpVglh75g
 const influxOrg = process.env.INFLUXDB_ORG || 'Flower'; // 替換為你的 InfluxDB Org 或在環境變數中設定
 const influxBucket = process.env.INFLUXDB_BUCKET || 'login_logs'; // 替換為你的 InfluxDB Bucket 或在環境變數中設定
 
+// +++ Add Logging Here +++
+console.log("--- InfluxDB Configuration Check ---");
+console.log("InfluxDB URL:", influxUrl);
+console.log("InfluxDB Org:", influxOrg);
+console.log("InfluxDB Bucket:", influxBucket);
+// **NEVER log the full token in production logs**
+console.log("InfluxDB Token Loaded:", influxToken ? `Yes (Length: ${influxToken.length})` : "No");
+console.log("------------------------------------");
+// ++++++++++++++++++++++++
+
+if (!influxToken || influxToken === '5OHSyb94Xs86DA98VW62dpVglh75g3iqmGDoQDKriQHf--vk0EgxofSuh-MBAZ75qQNMebv7yp-ko-ROb1Q2DA==' || !influxOrg || !influxBucket || !influxUrl) {
+    console.error("FATAL ERROR: InfluxDB environment variables are not properly configured.");
+    // Optionally, you could prevent the app from starting fully or disable Influx writing
+}
 
 // 建立 InfluxDB Client
 const influxDB = new InfluxDB({ url: influxUrl, token: influxToken });
 // 建立 Write API
 const writeApi = influxDB.getWriteApi(influxOrg, influxBucket);
 console.log(`InfluxDB write API configured for bucket: ${influxBucket}`);
-// -----------------------------
+
+
 
 
 const API_KEY = "AIzaSyBwqv30_RB4M3cd3C7aAUyDf0PcDb8_R_U"; // 請替換成你的 API Key
@@ -87,7 +102,7 @@ router.post("/analyzeImage", async function (req, res) {
 
 
 // --- 新增：記錄登入事件到 InfluxDB ---
-router.post("/log-login", function (req, res) {
+router.post("/log-login", async function (req, res) { // Make async for potential flush
     const { userName } = req.body;
 
     if (!userName) {
@@ -97,24 +112,29 @@ router.post("/log-login", function (req, res) {
 
     console.log(`Received login attempt for user: ${userName}`);
 
-    // 建立 InfluxDB 資料點 (Point)
-    const point = new Point('login_events') // 'login_events' 是 measurement 的名稱
-      .tag('source', 'webapp') // 可以添加 tag 來分類資料，例如來源是 webapp
-      .stringField('user_name', userName) // 將使用者名稱儲存為 string field
-      .timestamp(new Date()); // InfluxDB 會自動加上時間戳，但也可以手動指定
+    const point = new Point('login_events')
+      .tag('source', 'webapp')
+      .stringField('user_name', userName)
+      .timestamp(new Date());
 
     try {
-        // 將資料點寫入 InfluxDB
+        console.log(`Attempting to write point to InfluxDB bucket: ${influxBucket}`); // Add log before write
         writeApi.writePoint(point);
-        // 確保資料被送出 (非必要，但對於立即關閉的腳本或 lambda 可能有用)
-        // writeApi.flush().then(() => { console.log('InfluxDB write flushed.'); });
-        console.log(`Logged login event for user: ${userName} to InfluxDB bucket: ${influxBucket}`);
-        res.json({ status: "success", message: "Login event logged" });
+        console.log(`Point supposedly written for user: ${userName}. Attempting to flush...`); // Add log after write
+
+        // Try explicitly flushing the write buffer
+        await writeApi.flush();
+        console.log(`InfluxDB write flushed for user: ${userName}.`); // Add log after flush
+
+        // This log message might be misleading if flush fails silently or write fails later
+        // console.log(`Logged login event for user: ${userName} to InfluxDB bucket: ${influxBucket}`);
+        res.json({ status: "success", message: "Login event logged and flushed" });
+
     } catch (error) {
-        console.error("Error writing to InfluxDB:", error);
-        // 即使記錄失敗，也可能希望登入繼續，所以不一定返回 500
-        // 這裡只在伺服器端記錄錯誤，並返回成功給前端 (或者可以選擇返回錯誤)
-        res.status(500).json({ status: "error", message: "Failed to log login event" });
+        // Log the *full* error object to see details
+        console.error("!!! Error writing or flushing to InfluxDB:", error);
+        // Send a more specific error response
+        res.status(500).json({ status: "error", message: "Failed to write login event to DB", errorDetails: error.message });
     }
 });
 
