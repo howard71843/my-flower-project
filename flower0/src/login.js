@@ -8,21 +8,40 @@ function Login() {
   const [name, setName] = useState('');
   const navigate = useNavigate(); // 初始化 useNavigate
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => { // Make the function async
     event.preventDefault(); // 防止表單提交的默認行為
-    if (name.trim() !== '') {
-      navigate('/main');
+    const trimmedName = name.trim();
+
+    if (trimmedName !== '') {
+      try {
+        // --- Call the backend to log the login event ---
+        const response = await fetch('/api/log-login', { // Use await here
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userName: trimmedName }) // Send the trimmed name
+        });
+
+        if (!response.ok) {
+          // Log an error if logging fails, but don't necessarily block login
+          console.error('Failed to log login event:', response.status, await response.text());
+          // You could show a non-blocking warning to the user if needed
+        } else {
+          console.log('Login event logged successfully for user:', trimmedName);
+        }
+        // Regardless of logging success/failure (unless you want to block), navigate
+        navigate('/main');
+
+      } catch (error) {
+         console.error('Error calling log-login API:', error);
+         // Decide if you still want to navigate if logging API call fails
+         // For simplicity, we still navigate here.
+         navigate('/main');
+      }
     } else {
       // Show an alert if the name field is empty
       alert('請輸入您的姓名！');
     }
   }
-
-  fetch('/api/log-login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userName: "王小明" })
-  });
   
   
 

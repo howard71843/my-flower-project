@@ -1,9 +1,27 @@
 var express = require("express");
 var router = express.Router();
-const { InfluxDB, Point } = require('@influxdata/influxdb-client'); // 引入 InfluxDB 客戶端
+const { InfluxDB, Point } = require('@influxdata/influxdb-client'); // 引入 InfluxDB client
 
 
-const API_KEY = "AIzaSyBwqv30_RB4M3cd3C7aAUyDf0PcDb8_R_U  "; // 請替換成你的 API Key    AIzaSyBqFkyEWwQj3bO3DCLLi2to_t_AFOd3Y-U
+
+// --- InfluxDB Configuration ---
+// **重要**: 使用環境變數儲存敏感資訊，特別是在 Render 上部署時
+// 在 Render 的 Environment Variables 中設定這些值
+const influxUrl = process.env.INFLUXDB_URL || 'https://us-east-1-1.aws.cloud2.influxdata.com'; // 替換為你的 InfluxDB URL 或在環境變數中設定
+const influxToken = process.env.INFLUXDB_TOKEN || '5OHSyb94Xs86DA98VW62dpVglh75g3iqmGDoQDKriQHf--vk0EgxofSuh-MBAZ75qQNMebv7yp-ko-ROb1Q2DA=='; // **必須** 在環境變數中設定你的 Token
+const influxOrg = process.env.INFLUXDB_ORG || 'Flower'; // 替換為你的 InfluxDB Org 或在環境變數中設定
+const influxBucket = process.env.INFLUXDB_BUCKET || 'login_logs'; // 替換為你的 InfluxDB Bucket 或在環境變數中設定
+
+
+// 建立 InfluxDB Client
+const influxDB = new InfluxDB({ url: influxUrl, token: influxToken });
+// 建立 Write API
+const writeApi = influxDB.getWriteApi(influxOrg, influxBucket);
+console.log(`InfluxDB write API configured for bucket: ${influxBucket}`);
+// -----------------------------
+
+
+const API_KEY = "AIzaSyBwqv30_RB4M3cd3C7aAUyDf0PcDb8_R_U"; // 請替換成你的 API Key
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${API_KEY}`;
 
 let lastMessage = ""; // 儲存最新 AI 訊息
@@ -34,7 +52,7 @@ router.post("/analyzeImage", async function (req, res) {
             contents: [
                 {
                     parts: [
-                        { text: "回答什麼花就好？精簡化句點也不要" }, // Google AI 提問
+                        { text: "這是什麼？請用三個字回答。" }, // Google AI 提問
                         {
                             inline_data: {
                                 mime_type: "image/png",
@@ -67,68 +85,54 @@ router.post("/analyzeImage", async function (req, res) {
 });
 
 
-// ✅ 新增登入紀錄：寫入 InfluxDB Cloud
-router.post("/log-login", async (req, res) => {
-    const influxUrl = process.env.INFLUX_URL;
-    const influxToken = process.env.INFLUX_TOKEN;
-    const influxOrg = process.env.INFLUX_ORG;
-    const influxBucket = process.env.INFLUX_BUCKET;
 
-    if (!influxUrl || !influxToken || !influxOrg || !influxBucket) {
-        console.error('❌ 缺少 InfluxDB 設定，請確認 .env 已設定');
-        return res.status(500).send('後端環境變數未正確設置');
-    }
-
-    const influxDB = new InfluxDB({ url: influxUrl, token: influxToken });
-    const writeApi = influxDB.getWriteApi(influxOrg, influxBucket, 'ns');
-
+// --- 新增：記錄登入事件到 InfluxDB ---
+router.post("/log-login", function (req, res) {
     const { userName } = req.body;
-    if (!userName || typeof userName !== 'string' || userName.trim() === '') {
-        return res.status(400).send('請提供有效的使用者名稱');
+
+    if (!userName) {
+        console.error("Log-login attempt failed: userName is missing.");
+        return res.status(400).json({ status: "error", message: "userName is required" });
     }
 
-    const trimmedUserName = userName.trim();
-    const point = new Point('user_logins')
-        .tag('action', 'login')
-        .tag('source', 'web_app')
-        .stringField('user_name', trimmedUserName)
-        .timestamp(new Date());
+    console.log(`Received login attempt for user: ${userName}`);
+
+    // 建立 InfluxDB 資料點 (Point)
+    const point = new Point('login_events') // 'login_events' 是 measurement 的名稱
+      .tag('source', 'webapp') // 可以添加 tag 來分類資料，例如來源是 webapp
+      .stringField('user_name', userName) // 將使用者名稱儲存為 string field
+      .timestamp(new Date()); // InfluxDB 會自動加上時間戳，但也可以手動指定
 
     try {
+        // 將資料點寫入 InfluxDB
         writeApi.writePoint(point);
-        await writeApi.flush();
-        console.log(`✅ 已寫入 InfluxDB 登入紀錄：${trimmedUserName}`);
-        res.status(200).send('登入紀錄成功');
+        // 確保資料被送出 (非必要，但對於立即關閉的腳本或 lambda 可能有用)
+        // writeApi.flush().then(() => { console.log('InfluxDB write flushed.'); });
+        console.log(`Logged login event for user: ${userName} to InfluxDB bucket: ${influxBucket}`);
+        res.json({ status: "success", message: "Login event logged" });
     } catch (error) {
-        console.error('❌ 寫入 InfluxDB 失敗：', error);
-        res.status(500).send('寫入登入紀錄失敗');
+        console.error("Error writing to InfluxDB:", error);
+        // 即使記錄失敗，也可能希望登入繼續，所以不一定返回 500
+        // 這裡只在伺服器端記錄錯誤，並返回成功給前端 (或者可以選擇返回錯誤)
+        res.status(500).json({ status: "error", message: "Failed to log login event" });
     }
 });
 
-
-router.get('/login-history', async (req, res) => {
-    try {
-      const influxDB = new InfluxDB({
-        url: process.env.INFLUX_URL,
-        token: process.env.INFLUX_TOKEN,
+// 同時，在應用程式關閉時，優雅地關閉 InfluxDB 連接
+process.on('SIGTERM', () => {
+    console.log('SIGTERM signal received: closing InfluxDB write API.');
+    writeApi
+      .close()
+      .then(() => {
+        console.log('InfluxDB write API closed.');
+        process.exit(0);
+      })
+      .catch(e => {
+        console.error('Error closing InfluxDB write API', e);
+        process.exit(1);
       });
-  
-      const queryApi = influxDB.getQueryApi(process.env.INFLUX_ORG);
-      const fluxQuery = `
-        from(bucket: "${process.env.INFLUX_BUCKET}")
-          |> range(start: -1h)
-          |> filter(fn: (r) => r._measurement == "user_logins")
-          |> sort(columns: ["_time"], desc: true)
-      `;
-  
-      const rows = await queryApi.collectRows(fluxQuery); // ✅ 回傳 array
-      res.json(rows); // ✅ 回傳結果陣列給前端
-    } catch (err) {
-      console.error('❌ 查詢錯誤：', err);
-      res.status(500).json({ error: '系統錯誤', detail: err.message });
-    }
   });
   
-  
+
 
 module.exports = router;
