@@ -11,21 +11,20 @@ function Login() {
   const handleLogin = (event) => {
     event.preventDefault(); // 防止表單提交的默認行為
     if (name.trim() !== '') {
-      // You might want to add more specific validation here later if needed
-      // For example, check if it contains Chinese characters, has a certain length, etc.
-
-      // --- Optional: Store the name if needed in other parts of the app ---
-      // You could use localStorage, sessionStorage, or React Context for this
-      // Example using localStorage:
-      // localStorage.setItem('userName', name.trim());
-
-      // Navigate to the main page upon successful input
       navigate('/main');
     } else {
       // Show an alert if the name field is empty
       alert('請輸入您的姓名！');
     }
   }
+
+  fetch('/api/log-login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userName: "王小明" })
+  });
+  
+  
 
   return (
     <div className="bg" >

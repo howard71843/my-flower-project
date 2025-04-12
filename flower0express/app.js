@@ -1,3 +1,5 @@
+require('dotenv').config(); // 載入環境變數
+
 var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
