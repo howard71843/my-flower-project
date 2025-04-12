@@ -121,24 +121,14 @@ router.get('/login-history', async (req, res) => {
           |> sort(columns: ["_time"], desc: true)
       `;
   
-      const results = [];
-      await queryApi.collectRows(fluxQuery, {
-        next(row) {
-          results.push(row);
-        },
-        error(error) {
-          console.error('❌ 查詢失敗:', error);
-          res.status(500).json({ error: '查詢失敗', detail: error.message });
-        },
-        complete() {
-          res.json(results);
-        },
-      });
+      const rows = await queryApi.collectRows(fluxQuery); // ✅ 回傳 array
+      res.json(rows); // ✅ 回傳結果陣列給前端
     } catch (err) {
-      console.error('❌ 系統錯誤:', err);
+      console.error('❌ 查詢錯誤：', err);
       res.status(500).json({ error: '系統錯誤', detail: err.message });
     }
   });
+  
   
 
 module.exports = router;
