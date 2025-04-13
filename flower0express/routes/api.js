@@ -39,20 +39,7 @@ if (!influxUrl || !influxToken || !influxOrg || !influxBucket) {
         writeApi = influxDB.getWriteApi(influxOrg, influxBucket);
         console.log(`✅ InfluxDB Write API successfully configured for Bucket: ${influxBucket}`);
 
-        // 添加監聽器以處理潛在的寫入錯誤 (非同步)
-        writeApi.use((point, T) => {
-            console.log(`[Influx Write Success Internal Callback] Point written for measurement: ${point.measurement}`);
-        }, (error) => {
-            console.error(`\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
-            console.error(`[Influx Write Error Internal Callback] Failed to write point:`);
-            console.error(`Error Message: ${error?.message || 'Unknown error'}`);
-            if (error?.response?.data) { // 嘗試獲取更詳細的後端錯誤
-                 console.error(`InfluxDB Response Data: ${error.response.data}`);
-            }
-            console.error(`Stack Trace: ${error?.stack || 'No stack trace available'}`);
-            console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n`);
-        });
-
+        
 
     } catch (initError) {
         console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
