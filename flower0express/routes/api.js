@@ -21,17 +21,48 @@ console.log("InfluxDB Bucket:", influxBucket);
 console.log("InfluxDB Token Loaded:", influxToken ? `Yes (Length: ${influxToken.length})` : "No");
 console.log("------------------------------------");
 // ++++++++++++++++++++++++
+let writeApi; // 將 writeApi 宣告在外面，以便全局檢查
 
-if (!influxToken || influxToken === '5OHSyb94Xs86DA98VW62dpVglh75g3iqmGDoQDKriQHf--vk0EgxofSuh-MBAZ75qQNMebv7yp-ko-ROb1Q2DA==' || !influxOrg || !influxBucket || !influxUrl) {
-    console.error("FATAL ERROR: InfluxDB environment variables are not properly configured.");
-    // Optionally, you could prevent the app from starting fully or disable Influx writing
+if (!influxUrl || !influxToken || !influxOrg || !influxBucket) {
+    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    console.error("FATAL: InfluxDB environment variables are missing or incomplete.");
+    console.error("Please check INFLUXDB_URL, INFLUXDB_TOKEN, INFLUXDB_ORG, INFLUXDB_BUCKET in Render.");
+    console.error("InfluxDB logging will be disabled.");
+    console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    // 在這種情況下，可以選擇讓應用程式崩潰或禁用相關功能
+    // writeApi = null; // 標記 writeApi 為不可用
+} else {
+    try {
+        // 建立 InfluxDB Client
+        const influxDB = new InfluxDB({ url: influxUrl, token: influxToken });
+        // 建立 Write API
+        writeApi = influxDB.getWriteApi(influxOrg, influxBucket);
+        console.log(`✅ InfluxDB Write API successfully configured for Bucket: ${influxBucket}`);
+
+        // 添加監聽器以處理潛在的寫入錯誤 (非同步)
+        writeApi.use((point, T) => {
+            console.log(`[Influx Write Success Internal Callback] Point written for measurement: ${point.measurement}`);
+        }, (error) => {
+            console.error(`\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
+            console.error(`[Influx Write Error Internal Callback] Failed to write point:`);
+            console.error(`Error Message: ${error?.message || 'Unknown error'}`);
+            if (error?.response?.data) { // 嘗試獲取更詳細的後端錯誤
+                 console.error(`InfluxDB Response Data: ${error.response.data}`);
+            }
+            console.error(`Stack Trace: ${error?.stack || 'No stack trace available'}`);
+            console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n`);
+        });
+
+
+    } catch (initError) {
+        console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        console.error("FATAL: Error initializing InfluxDB client or Write API:");
+        console.error(initError);
+        console.error("InfluxDB logging will be disabled.");
+        console.error("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+        writeApi = null; // 標記 writeApi 為不可用
+    }
 }
-
-// 建立 InfluxDB Client
-const influxDB = new InfluxDB({ url: influxUrl, token: influxToken });
-// 建立 Write API
-const writeApi = influxDB.getWriteApi(influxOrg, influxBucket);
-console.log(`InfluxDB write API configured for bucket: ${influxBucket}`);
 
 
 
@@ -101,57 +132,87 @@ router.post("/analyzeImage", async function (req, res) {
 
 
 
-// --- 新增：記錄登入事件到 InfluxDB ---
-router.post("/log-login", async function (req, res) { // Make async for potential flush
+// --- 更新後的 /log-login 路由 ---
+router.post("/log-login", async function (req, res) { // 改為 async
     const { userName } = req.body;
 
-    if (!userName) {
-        console.error("Log-login attempt failed: userName is missing.");
-        return res.status(400).json({ status: "error", message: "userName is required" });
+    // 1. 檢查 InfluxDB 是否可用
+    if (!writeApi) {
+        console.warn("Log-login attempt skipped: InfluxDB is not configured or failed to initialize.");
+        // 即使無法記錄，仍然讓登入繼續？取決於你的需求
+        // 如果必須記錄，可以返回錯誤：
+        // return res.status(503).json({ status: "error", message: "Logging service unavailable" });
+        // 此處選擇僅警告並繼續：
+        return res.status(200).json({ status: "warning", message: "Login successful, but event not logged (DB unavailable)" });
     }
 
-    console.log(`Received login attempt for user: ${userName}`);
+    // 2. 檢查 userName
+    if (!userName || typeof userName !== 'string' || userName.trim() === '') {
+        console.error("Log-login attempt failed: userName is missing or invalid.");
+        return res.status(400).json({ status: "error", message: "Valid userName is required" });
+    }
 
-    const point = new Point('login_events')
-      .tag('source', 'webapp')
-      .stringField('user_name', userName)
-      .timestamp(new Date());
+    const trimmedUserName = userName.trim();
+    console.log(`Received login attempt for user: ${trimmedUserName}`);
 
+    // 3. 建立資料點
+    const point = new Point('login_events') // Measurement 名稱 (與 InfluxDB Bucket 中的結構對應)
+      .tag('source', 'webapp')            // Tag (用於過濾和索引)
+      .stringField('user_name', trimmedUserName) // Field (實際的數據值)
+      .timestamp(new Date());             // 時間戳 (通常自動產生，也可手動指定)
+
+    // 4. 嘗試寫入並 Flush
     try {
-        console.log(`Attempting to write point to InfluxDB bucket: ${influxBucket}`); // Add log before write
-        writeApi.writePoint(point);
-        console.log(`Point supposedly written for user: ${userName}. Attempting to flush...`); // Add log after write
+        console.log(`Attempting to write point to InfluxDB bucket: ${influxBucket} for user: ${trimmedUserName}`);
+        writeApi.writePoint(point); // 將點放入寫入緩衝區
 
-        // Try explicitly flushing the write buffer
-        await writeApi.flush();
-        console.log(`InfluxDB write flushed for user: ${userName}.`); // Add log after flush
+        console.log(`Point added to buffer for user: ${trimmedUserName}. Attempting to flush...`);
+        await writeApi.flush(); // 強制將緩衝區的數據發送到 InfluxDB
 
-        // This log message might be misleading if flush fails silently or write fails later
-        // console.log(`Logged login event for user: ${userName} to InfluxDB bucket: ${influxBucket}`);
-        res.json({ status: "success", message: "Login event logged and flushed" });
+        console.log(`✅ InfluxDB write flushed successfully for user: ${trimmedUserName}.`);
+        res.json({ status: "success", message: "Login event logged" });
 
     } catch (error) {
-        // Log the *full* error object to see details
-        console.error("!!! Error writing or flushing to InfluxDB:", error);
-        // Send a more specific error response
-        res.status(500).json({ status: "error", message: "Failed to write login event to DB", errorDetails: error.message });
+        console.error(`\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!`);
+        console.error(`API HANDLER CATCH BLOCK: Error writing or flushing login event for user ${trimmedUserName} to InfluxDB:`);
+        console.error(`Error Message: ${error?.message || 'Unknown error during write/flush'}`);
+        if (error?.response?.data) {
+             console.error(`InfluxDB Response Data: ${error.response.data}`);
+        }
+        console.error(`Stack Trace: ${error?.stack || 'No stack trace available'}`);
+        console.error(`!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n`);
+        // 返回伺服器錯誤，但包含一些資訊
+        res.status(500).json({ status: "error", message: "Failed to log login event due to DB error", errorDetails: error.message });
     }
 });
+// ------------------------------------
 
-// 同時，在應用程式關閉時，優雅地關閉 InfluxDB 連接
+// 優雅關閉 InfluxDB 連接
+function closeInfluxDB() {
+    console.log('Attempting to close InfluxDB write API...');
+    if (writeApi) {
+        return writeApi.close()
+            .then(() => {
+                console.log('InfluxDB write API closed successfully.');
+            })
+            .catch(e => {
+                console.error('Error closing InfluxDB write API:', e);
+            });
+    } else {
+        console.log('InfluxDB write API was not initialized, nothing to close.');
+        return Promise.resolve(); // 返回一個已解決的 Promise
+    }
+}
+
 process.on('SIGTERM', () => {
-    console.log('SIGTERM signal received: closing InfluxDB write API.');
-    writeApi
-      .close()
-      .then(() => {
-        console.log('InfluxDB write API closed.');
-        process.exit(0);
-      })
-      .catch(e => {
-        console.error('Error closing InfluxDB write API', e);
-        process.exit(1);
-      });
-  });
+  console.log('SIGTERM signal received. Closing InfluxDB connection...');
+  closeInfluxDB().finally(() => process.exit(0));
+});
+
+process.on('SIGINT', () => {
+  console.log('SIGINT signal received (Ctrl+C). Closing InfluxDB connection...');
+  closeInfluxDB().finally(() => process.exit(0));
+});
   
 
 
