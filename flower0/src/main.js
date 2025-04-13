@@ -1,111 +1,141 @@
-import React, { useState, useEffect } from "react"; 
+/* --- START OF FILE main.js --- */
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./main.css"; 
+import "./main.css";
 
-
-
+// ... (keep flowerImages and customSpeechText definitions) ...
 // 🌸 花卉名稱與對應圖片
-const flowerImages = {
-    "九重葛": "/images/九重葛.jpg",
-    "木棉花": "/images/木棉花.jpg",
-    "桂花": "/images/桂花.jpg",
-    "櫻花": "/images/櫻花.jpg",
-    "油桐花": "/images/油桐花.jpg",
-    "波斯菊": "/images/波斯菊.jpg",
-    "牽牛花": "/images/牽牛花.jpg",
-    "玫瑰花": "/images/玫瑰花.jpg",
-    "金雞菊": "/images/金雞菊.jpg",
-    "黃花風鈴木": "/images/黃花風鈴木.jpg"
-};
-
+const flowerImages = { /* ... */ };
 // 🌸 **自訂每個花種的語音內容**
-const customSpeechText = {
-  "九重葛": "/audio/九重葛.mp3",
-  "木棉花": "/audio/木棉花.mp3",
-  "桂花": "/audio/桂花.mp3",
-  "櫻花": "/audio/櫻花.mp3",
-  "油桐花": "/audio/油桐花.mp3",
-  "波斯菊": "/audio/波斯菊.mp3",
-  "牽牛花": "/audio/牽牛花.mp3",
-  "玫瑰花": "/audio/玫瑰花.mp3",
-  "金雞菊": "/audio/金雞菊.mp3",
-  "黃花風鈴木": "/audio/黃花風鈴木.mp3",
-};
+const customSpeechText = { /* ... */ };
+
 
 const Main = () => {
-    // ✅ `unlockedImages` 初始值從 `localStorage` 讀取，避免 React 未即時更新
+    // ***** Get the current user *****
+    const [currentUser, setCurrentUser] = useState(() => {
+        return localStorage.getItem("currentUser") || null;
+    });
+    // ********************************
+
+    // ✅ Use a user-specific key for unlockedImages state
     const [unlockedImages, setUnlockedImages] = useState(() => {
-        const storedUnlockedImages = localStorage.getItem("unlockedImages");
+        const user = localStorage.getItem("currentUser"); // Get user first
+        if (!user) return {}; // No user logged in, return empty state
+        const userStorageKey = `unlockedImages_${user}`; // Create user-specific key
+        const storedUnlockedImages = localStorage.getItem(userStorageKey);
+        console.log(`Reading ${userStorageKey} from localStorage:`, storedUnlockedImages);
         return storedUnlockedImages ? JSON.parse(storedUnlockedImages) : {};
     });
 
-    const [message, setMessage] = useState("");  
+    const [message, setMessage] = useState("");
     const navigate = useNavigate();
 
-    // ✅ 讀取後端 AI 辨識結果並解鎖圖片
+    // Redirect if no user is logged in (optional but recommended)
     useEffect(() => {
+        if (!currentUser) {
+            console.warn("No current user found in localStorage. Redirecting to login.");
+            // Optionally show a message before redirecting
+            // alert("請先登入！");
+            navigate('/login'); // Or your login route
+        }
+    }, [currentUser, navigate]);
+
+
+    // ✅ Read AI result and unlock image for the CURRENT USER
+    useEffect(() => {
+        // Only run if currentUser is set
+        if (!currentUser) return;
+
         const fetchResult = async () => {
             try {
-                const response = await fetch(`${window.location.origin}/api/getResult`);   // 根據當前網址決定呼叫位置  而本地"http://localhost:3000/api/getResult"
+                // Fetch AI result (Ensure this API endpoint doesn't need user context,
+                // or modify it if it does)
+                const response = await fetch(`${window.location.origin}/api/getResult`);
                 const data = await response.json();
-                console.log("🌐 從後端獲取的訊息：", data.message);
-                const targetFlower = localStorage.getItem("targetFlower"); // 新增這行
-                setMessage(data.message);
+                console.log(`🌐 Got AI message for ${currentUser}:`, data.message);
+                const targetFlower = localStorage.getItem("targetFlower"); // Get target flower
+                setMessage(data.message); // Update message state (optional)
 
-                if (data.message.trim() === targetFlower) {
+                // Check if AI result matches the target flower for unlock
+                if (data.message && targetFlower && data.message.trim() === targetFlower) {
+                    console.log(`👍 Match found for ${currentUser}! Unlocking ${targetFlower}.`);
+
+                    // Update state AND user-specific localStorage
                     setUnlockedImages(prevState => {
+                        // Avoid unnecessary updates if already unlocked
+                        if (prevState[targetFlower]) {
+                            return prevState;
+                        }
                         const updatedState = {
                             ...prevState,
-                            [data.message.trim()]: true, // ✅ 只更新對應的圖片
+                            [targetFlower]: true,
                         };
-                        console.log("🔄 更新解鎖狀態：", updatedState);
-
-                        // ✅ 更新 localStorage
-                        localStorage.setItem("unlockedImages", JSON.stringify(updatedState));
+                        // Save to user-specific key
+                        const userStorageKey = `unlockedImages_${currentUser}`;
+                        localStorage.setItem(userStorageKey, JSON.stringify(updatedState));
+                        console.log(`💾 Saved unlocked status for ${currentUser} to ${userStorageKey}:`, updatedState);
                         return updatedState;
                     });
+
+                    // Optional: Clear target flower after successful unlock?
+                    // localStorage.removeItem("targetFlower");
+
+                } else {
+                     console.log(`🚫 No match or missing data for ${currentUser}. AI: '${data.message}', Target: '${targetFlower}'`);
                 }
             } catch (error) {
-                console.error("❌ 獲取 AI 訊息失敗：", error);
+                console.error(`❌ Failed to get AI message for ${currentUser}:`, error);
             }
         };
 
         fetchResult();
-    }, []);
+        // Dependency array includes currentUser to potentially re-run if user changes,
+        // though typically this effect runs once on mount after login.
+    }, [currentUser]);
 
-    // ✅ 監聽 `unlockedImages`，確保 `localStorage` 及 React 同步更新
-    useEffect(() => {
-        console.log("🔄 更新 localStorage，新的解鎖狀態：", unlockedImages);
-        localStorage.setItem("unlockedImages", JSON.stringify(unlockedImages));
-    }, [unlockedImages]);
+    // Note: The separate useEffect synchronizing unlockedImages state to localStorage
+    // is removed because saving now happens directly within the fetchResult logic
+    // using the user-specific key. This avoids potential race conditions.
 
-
-
-      // ✅ 點擊花種名稱時播放語音
-      const handleSpeak = (flowerName) => {
-        const speechText = customSpeechText[flowerName] || `這是${flowerName}`;
+    // ✅ Handle speech (no user context needed here)
+    const handleSpeak = (flowerName) => {
         const audioSrc = customSpeechText[flowerName];
         if (audioSrc) {
             const audio = new Audio(audioSrc);
             audio.play();
         } else {
-            alert(`找不到 ${flowerName} 的音訊檔案。`);
+            // Fallback or alert
+            const utterance = new SpeechSynthesisUtterance(`這是${flowerName}`);
+            speechSynthesis.speak(utterance); // Basic browser speech fallback
+            console.warn(`Audio file not found for ${flowerName}. Using basic speech synthesis.`);
+            // alert(`找不到 ${flowerName} 的音訊檔案。`);
         }
-    }
-
-    // ✅ 清除所有解鎖進度
-    const handleClearProgress = () => {
-        localStorage.removeItem("unlockedImages"); // 清除紀錄
-        setUnlockedImages({}); // 重設 state
-        alert("✅ 所有花種解鎖狀態已重置！");
     };
 
-      
-      
-    
+    // ✅ Clear progress for the CURRENT USER
+    const handleClearProgress = () => {
+        if (currentUser) {
+            const userStorageKey = `unlockedImages_${currentUser}`;
+            localStorage.removeItem(userStorageKey); // Clear specific user's data
+            setUnlockedImages({}); // Reset state in React
+            alert(`✅ ${currentUser} 的花種解鎖狀態已重置！`);
+            console.log(`Cleared progress for ${currentUser} (Key: ${userStorageKey})`);
+        } else {
+            alert("錯誤：無法識別目前使用者，無法清除紀錄。");
+        }
+    };
+
+    // Render logic (check currentUser before rendering main content)
+    if (!currentUser) {
+        // Optional: Show a loading indicator or a message while redirecting
+        return <div>載入中，或請先登入...</div>;
+    }
 
     return (
         <div className="main-container">
+            {/* Welcome message */}
+            <div className="welcome-message">歡迎，{currentUser}！</div>
+
             <div className="title-container">
                 <img src="/images/彰化市.png" alt="彰化市" className="title-image" />
             </div>
@@ -115,36 +145,47 @@ const Main = () => {
                         <img
                             src={src}
                             alt={flowerName}
-                            className="flower-image"
+                            // Check unlocked status from the user-specific state
+                            className={`flower-image ${unlockedImages[flowerName] ? 'unlocked' : 'locked'}`}
                             style={{
                                 filter: unlockedImages[flowerName] ? "grayscale(0%)" : "grayscale(100%)",
-                                transition: "filter 0.5s ease-in-out"
+                                transition: "filter 0.5s ease-in-out",
+                                cursor: "pointer" // Add cursor pointer to indicate clickability
                             }}
                             onClick={() => {
-                                localStorage.setItem("targetFlower", flowerName); // 記錄點的是哪個
-                                navigate(`/App?target=${encodeURIComponent(flowerName)}`);
+                                // Still set targetFlower globally for the camera page
+                                localStorage.setItem("targetFlower", flowerName);
+                                console.log(`Set targetFlower to: ${flowerName} for user ${currentUser}`);
+                                navigate(`/App?target=${encodeURIComponent(flowerName)}`); // Navigate to camera/app page
                             }}
                         />
-                         <p 
+                         <p
                             className="flower-name"
                             onClick={() => handleSpeak(flowerName)}
-                            style={{ cursor: "pointer", color: "blue", textDecoration: "underline" }}
+                            style={{ cursor: "pointer", color: unlockedImages[flowerName] ? "inherit" : "#888", /* textDecoration: "underline" */ }}
                         >
-                            🔊 {flowerName}
+                            {unlockedImages[flowerName] ? '🔊 ' : '🔒 '} {/* Indicate status */}
+                            {flowerName}
                         </p>
                     </div>
                 ))}
             </div>
-            
 
-        <div className="bottom-bar">
+
+            <div className="bottom-bar">
                 <h1 className="game" onClick={() => navigate("/game")}> 🧩 </h1>
-                <button className="reset-btn" onClick={handleClearProgress}>🔄 清除紀錄</button> {/*重製*/} 
-
-        </div>
+                <button className="reset-btn" onClick={handleClearProgress}>🔄 清除 {currentUser} 的紀錄</button>
+                 {/* Optional Logout Button */}
+                 <button className="logout-btn" onClick={() => {
+                     localStorage.removeItem("currentUser");
+                     // Optional: Clear other session-related things if needed
+                     navigate('/login');
+                 }}>登出</button>
+            </div>
 
         </div>
     );
 };
 
 export default Main;
+/* --- END OF FILE main.js --- */

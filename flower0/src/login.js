@@ -26,6 +26,7 @@ function Login() {
           console.error('Failed to log login event:', response.status, await response.text());
           // You could show a non-blocking warning to the user if needed
         } else {
+          localStorage.setItem("currentUser", trimmedName);
           console.log('Login event logged successfully for user:', trimmedName);
         }
         // Regardless of logging success/failure (unless you want to block), navigate
