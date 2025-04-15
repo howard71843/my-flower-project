@@ -241,7 +241,7 @@ const Main = () => {
             // 可選：清除其他相關的全域 localStorage 項目
             localStorage.removeItem('targetFlower');
             // 導回登入頁面
-            navigate('/login');
+            navigate('/');
         }
     };
 
