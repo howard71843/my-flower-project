@@ -1,5 +1,5 @@
 /* --- START OF FILE main.js --- */
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "./main.css";
 
@@ -32,62 +32,46 @@ const customSpeechText = {
 };
 
 const Main = () => {
-    const navigate = useNavigate();
-    // --- 新增：狀態，用於儲存當前登入的使用者名稱 ---
-    const [currentUser, setCurrentUser] = useState(null);
-    // --- 修改：unlockedImages 初始狀態為空，等待讀取使用者進度 ---
+    const navigate = useNavigate();  // --- 新增：狀態，用於儲存當前登入的使用者名稱 ---
+    const [currentUser, setCurrentUser] = useState(null); // --- 修改：unlockedImages 初始狀態為空，等待讀取使用者進度 ---
     const [unlockedImages, setUnlockedImages] = useState({});
-    const [message, setMessage] = useState("");
+    const [message, setMessage] = useState("");  // --- ✨ 新增：控制下拉選單是否開啟的狀態 ---
+    const [isMenuOpen, setIsMenuOpen] = useState(false); // --- ✨ 新增：創建一個 ref 來指向選單容器 ---
+    const menuRef = useRef(null);  // --- ✨ 新增：創建一個 ref 來指向選單容器 ---
 
     // --- 步驟 1：組件載入時，識別當前使用者 ---
     useEffect(() => {
-        // 從 localStorage 讀取登入時儲存的使用者名稱
-        const user = localStorage.getItem('currentUser');
+        const user = localStorage.getItem('currentUser');   // 嘗試從 localStorage 中讀取使用者名稱
         if (user) {
-            // 如果找到了使用者，就設定到 state 中
-            setCurrentUser(user);
+            setCurrentUser(user);   // 如果找到了使用者，就設定到 state 中
             console.log(`👤 識別到目前使用者: ${user}`);
         } else {
-            // 如果沒找到使用者，提示警告，可以選擇性地導回登入頁面
-            console.warn("⚠️ 在 localStorage 中找不到登入使用者。");
-             // 如果找不到使用者，你可能會導航回登入頁
-            // 這可能是導致路由錯誤的地方！
-            // 檢查你的路由設定是否有 /login
-            alert("找不到使用者資訊，將導回登入頁面。"); // 增加提示
-            navigate('/'); // 或者 navigate('/') 如果你的登入頁在根路徑
+            console.warn("⚠️ 在 localStorage 中找不到登入使用者。");  // 如果沒找到使用者，提示警告，可以選擇性地導回登入頁面
         }
-        // 這個 effect 只在組件掛載時執行一次（或者當 navigate 函數變化時，雖然不太可能）
     }, [navigate]);
+
 
     // --- 步驟 2：當識別到使用者後，載入該使用者的進度 ---
     useEffect(() => {
         // 只有在 currentUser 有值（即使用者已被識別）時才執行
         if (currentUser) {
-            // 構造該使用者專屬的 localStorage 鑰匙 (例如: "unlockedImages_王小明")
-            const progressKey = `unlockedImages_${currentUser}`;
+            const progressKey = `unlockedImages_${currentUser}`;  // 構造該使用者專屬的 localStorage 鑰匙 (例如: "unlockedImages_王小明")
             console.log(`🔑 嘗試讀取鑰匙 "${progressKey}" 的進度`);
-
-            // 從 localStorage 讀取該使用者的進度資料
-            const storedUnlockedImages = localStorage.getItem(progressKey);
+            const storedUnlockedImages = localStorage.getItem(progressKey);  // 從 localStorage 讀取該使用者的進度資料
 
             if (storedUnlockedImages) {
                 // 如果找到了儲存的進度
                 try {
-                    // 解析 JSON 字串為物件，並更新到 unlockedImages 狀態
-                    setUnlockedImages(JSON.parse(storedUnlockedImages));
+                    setUnlockedImages(JSON.parse(storedUnlockedImages));  // 解析 JSON 字串為物件，並更新到 unlockedImages 狀態
                     console.log(`✅ 成功載入使用者 ${currentUser} 的進度。`);
                 } catch (e) {
-                    // 如果解析出錯（比如儲存的資料損壞）
-                    console.error("❌ 解析儲存的進度失敗:", e);
-                    // 刪除損壞的資料，避免下次載入再出錯
-                    localStorage.removeItem(progressKey);
+                    console.error("❌ 解析儲存的進度失敗:", e);  // 如果解析出錯（比如儲存的資料損壞）
+                    localStorage.removeItem(progressKey);  // 刪除損壞的資料，避免下次載入再出錯
                     setUnlockedImages({}); // 重設為空狀態
                 }
             } else {
-                // 如果 localStorage 中沒有找到該使用者的進度
-                console.log(`ℹ️ 找不到使用者 ${currentUser} 的先前進度，將從新開始。`);
-                // 確保狀態是空的
-                setUnlockedImages({});
+                console.log(`ℹ️ 找不到使用者 ${currentUser} 的先前進度，將從新開始。`);  // 如果 localStorage 中沒有找到該使用者的進度  
+                setUnlockedImages({}); // 確保狀態是空的
             }
         }
         // 這個 effect 會在 currentUser 狀態變化時執行（也就是說，在步驟 1 識別到使用者後執行）
@@ -171,6 +155,35 @@ const Main = () => {
     }, [currentUser]);
 
 
+    // --- ✨ 新增：處理點擊選單外部區域以關閉選單 ---
+    useEffect(() => {
+        // 定義點擊事件處理函數
+        const handleClickOutside = (event) => {
+            // 檢查選單 ref 是否存在，並且點擊的目標是否不在選單內部
+            if (menuRef.current && !menuRef.current.contains(event.target)) {
+                setIsMenuOpen(false); // 關閉選單
+            }
+        };
+
+        // 如果選單是開啟的，就監聽 document 的 mousedown 事件
+        if (isMenuOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
+            console.log("🖱️ Added outside click listener");
+        } else {
+            // 如果選單是關閉的，就移除監聽器
+            document.removeEventListener("mousedown", handleClickOutside);
+            console.log("🖱️ Removed outside click listener");
+        }
+
+        // 清理函數：當組件卸載或 isMenuOpen 變化時，確保移除監聽器
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+            console.log("🖱️ Cleanup: Removed outside click listener");
+        };
+    }, [isMenuOpen]); // 這個 effect 依賴於 isMenuOpen 狀態
+
+
+
     // --- 點擊花種名稱時播放語音 (保持不變) ---
     const handleSpeak = (flowerName) => {
         const audioSrc = customSpeechText[flowerName];
@@ -219,8 +232,8 @@ const Main = () => {
             setUnlockedImages({}); // 清空當前顯示的進度
             // 可選：清除其他相關的全域 localStorage 項目
             localStorage.removeItem('targetFlower');
-            // 導回登入頁面
-            navigate('/');
+            setIsMenuOpen(false); // ✨ 登出後關閉選單
+            navigate('/login');
         }
     };
 
@@ -238,20 +251,55 @@ const Main = () => {
     // }
 
 
+    // --- ✨ 新增：切換選單開啟/關閉的函數 ---
+    const toggleMenu = () => {
+        setIsMenuOpen(prevState => !prevState); // 切換狀態
+    };
+
+    // --- 渲染邏輯 ---
+    if (currentUser === null && localStorage.getItem('currentUser')) {
+        return <div><p style={{textAlign: 'center', marginTop: '20px'}}>正在載入使用者資訊...</p></div>;
+    }
+
+
     return (
         // 整體容器
         <div className="main-container">
             {/* 頂部標題和使用者資訊區 */}
             <div className="title-container">
                 <img src="/images/彰化市.png" alt="彰化市" className="title-image" />
-                {/* 顯示目前使用者資訊和登出按鈕 */}
-                {currentUser && (
-                    <div className="user-info">
-                        <span className="current-user-display">👤 {currentUser}</span>
-                        <button onClick={handleLogout} className="logout-button" title="登出目前帳號">登出</button>
-                    </div>
-                )}
+                {/* --- ✨ 右側使用者選單區 --- */}
+                <div className="user-menu-container" ref={menuRef}> {/* ✨ 將 ref 附加到容器 */}
+                    {currentUser ? (
+                        <>
+                            {/* 選單觸發按鈕 (用使用者名稱) */}
+                            <button onClick={toggleMenu} className="menu-trigger">
+                                👤 {currentUser} ▼ {/* 用 ▼ 表示可以下拉 */}
+                            </button>
+
+                            {/* 下拉選單 (條件渲染) */}
+                            {isMenuOpen && (
+                                <div className="dropdown-menu">
+                                    {/* 登出選項 */}
+                                    <button onClick={handleLogout} className="dropdown-item">
+                                        登出
+                                    </button>
+                                    {/* 可以添加其他選單項目，例如 '個人資料' 等 */}
+                                    {/* <button onClick={() => alert('前往個人資料')} className="dropdown-item">個人資料</button> */}
+                                </div>
+                            )}
+                        </>
+                    ) : (
+                        // 如果沒有登入使用者，顯示登入按鈕
+                        <button onClick={() => navigate('/login')} className="login-prompt-button">
+                            請先登入
+                        </button>
+                    )}
+                </div>
+                {/* ------------------------ */}
             </div>
+
+            
 
             {/* 花朵圖片網格 */}
             <div className="grid-container">
