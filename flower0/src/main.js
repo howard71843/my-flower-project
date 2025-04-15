@@ -54,7 +54,7 @@ const Main = () => {
             // 這可能是導致路由錯誤的地方！
             // 檢查你的路由設定是否有 /login
             alert("找不到使用者資訊，將導回登入頁面。"); // 增加提示
-            navigate('/login'); // 或者 navigate('/') 如果你的登入頁在根路徑
+            navigate('/'); // 或者 navigate('/') 如果你的登入頁在根路徑
         }
         // 這個 effect 只在組件掛載時執行一次（或者當 navigate 函數變化時，雖然不太可能）
     }, [navigate]);
