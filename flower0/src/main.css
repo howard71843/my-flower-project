@@ -7,6 +7,35 @@
     padding: 20px;
 }
 
+/* --- main.css --- */
+
+/* 登出按鈕基本樣式 - 藍色 */
+.logout-button {
+    background-color: #007bff; /* 藍色背景 */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: center;
+    cursor: pointer;
+    margin-left: 10px;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+    vertical-align: middle;
+  }
+  
+  /* 滑鼠懸停 - 藍色 */
+  .logout-button:hover {
+    background-color: #0056b3; /* 深藍色 */
+  }
+  
+  /* 按鈕點擊 - 藍色 */
+  .logout-button:active {
+    background-color: #004085; /* 更深的藍色 */
+    transform: scale(0.98);
+  }
+
 .title {
     font-size: 24px;
     font-weight: bold;
