@@ -191,28 +191,7 @@ const Main = () => {
         }
     }
 
-    // --- 步驟 4：清除『目前使用者』的解鎖進度 ---
-    const handleClearProgress = () => {
-        // 確保知道是哪個使用者
-        if (currentUser) {
-            // 構造該使用者專屬的 localStorage 鑰匙
-            const progressKey = `unlockedImages_${currentUser}`;
-            try {
-                // 從 localStorage 中移除該使用者的紀錄
-                localStorage.removeItem(progressKey);
-                // 同時重設 React 的 state，讓畫面立即反應
-                setUnlockedImages({});
-                alert(`✅ 使用者 ${currentUser} 的花種解鎖狀態已成功重置！`);
-                console.log(`🗑️ 已清除使用者 ${currentUser} 的進度 (鑰匙: ${progressKey})。`);
-            } catch (storageError) {
-                 console.error("❌ 從 localStorage 清除進度失敗:", storageError);
-                 alert("清除紀錄時發生錯誤。");
-            }
-        } else {
-            // 如果不知道是哪個使用者，則提示錯誤
-            alert("無法清除進度：找不到登入的使用者資訊。");
-        }
-    };
+
 
     // --- 步驟 5：處理點擊花朵圖片的導航事件 ---
     const handleFlowerClick = (flowerName) => {
@@ -320,14 +299,7 @@ const Main = () => {
                 {/* 前往小遊戲的連結 (假設 /game 是小遊戲頁面) */}
                 <h1 className="game" onClick={() => navigate("/game")} title="前往配對小遊戲"> 🧩 </h1>
                 {/* 清除『目前使用者』紀錄的按鈕 */}
-                <button
-                    className="reset-btn"
-                    onClick={handleClearProgress}
-                    title={`清除使用者 ${currentUser || ''} 的所有花朵解鎖紀錄`} // 動態提示
-                    disabled={!currentUser} // 如果沒有使用者，禁用按鈕
-                >
-                    🔄 清除紀錄
-                </button>
+                
                 {/* 登出按鈕 (移到頂部了，這裡可以移除或保留作為備用) */}
                 {/* <button className="logout-btn" onClick={handleLogout} title="登出目前帳號">登出</button> */}
             </div>

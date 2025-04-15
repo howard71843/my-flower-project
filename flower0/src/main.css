@@ -7,6 +7,32 @@
     padding: 20px;
 }
 
+/* 在 main.css 或相關 CSS 文件中添加 */
+
+.logout-button { /* 或者 .logout-btn */
+    background-color: #007bff; /* 主題藍色 */
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;      /* 更圓的邊角 */
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 10px;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+    outline: none;
+    vertical-align: middle;
+    line-height: 1.5;         /* 調整行高讓文字垂直居中更好看 */
+  }
+  
+  .logout-button:hover {
+    background-color: #0056b3; /* 懸停時變深藍 */
+  }
+  
+  .logout-button:active {
+    background-color: #004085; /* 點擊時更深 */
+    transform: translateY(1px);
+  }
+
 .title {
     font-size: 24px;
     font-weight: bold;
