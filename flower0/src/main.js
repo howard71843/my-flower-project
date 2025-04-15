@@ -42,7 +42,7 @@ const Main = () => {
     // --- 步驟 1：組件載入時，識別當前使用者 ---
     useEffect(() => {
         // 從 localStorage 讀取登入時儲存的使用者名稱
-        const user = localStorage.getItem('loggedInUser');
+        const user = localStorage.getItem('currentUser');
         if (user) {
             // 如果找到了使用者，就設定到 state 中
             setCurrentUser(user);
@@ -50,8 +50,11 @@ const Main = () => {
         } else {
             // 如果沒找到使用者，提示警告，可以選擇性地導回登入頁面
             console.warn("⚠️ 在 localStorage 中找不到登入使用者。");
-            // alert("請先登入！"); // 可以取消註解這行來提示使用者
-            // navigate('/login'); // 可以取消註解這行來強制導回登入頁
+             // 如果找不到使用者，你可能會導航回登入頁
+            // 這可能是導致路由錯誤的地方！
+            // 檢查你的路由設定是否有 /login
+            alert("找不到使用者資訊，將導回登入頁面。"); // 增加提示
+            navigate('/login'); // 或者 navigate('/') 如果你的登入頁在根路徑
         }
         // 這個 effect 只在組件掛載時執行一次（或者當 navigate 函數變化時，雖然不太可能）
     }, [navigate]);
