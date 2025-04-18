@@ -3,7 +3,6 @@
 var express = require("express");
 var router = express.Router();
 const { InfluxDB, Point } = require('@influxdata/influxdb-client'); // 引入 InfluxDB client
-const fetch = require('node-fetch'); // ** Import node-fetch if you are using Node < 18, or ensure your Node version supports global fetch **
 
 // --- InfluxDB Configuration ---
 // **重要**: 使用環境變數儲存敏感資訊，特別是在 Render 上部署時
