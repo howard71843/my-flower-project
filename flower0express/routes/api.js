@@ -85,7 +85,7 @@ router.post("/analyzeImage", async function (req, res) {
             contents: [
                 {
                     parts: [
-                        { text: "這是什麼？請用三個字回答。" }, // Google AI 提問
+                        { text: "這是什麼？回答花種即可不用標點符號。" }, // Google AI 提問
                         {
                             inline_data: {
                                 mime_type: "image/png",
