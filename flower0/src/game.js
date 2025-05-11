@@ -8,18 +8,18 @@ import "./game.css";
 // 🌸 所有遊戲中可能用到的花卉圖示 (名稱需與 Main.js 中的花卉名稱對應)
 // 這樣我們才能根據 Main.js 的解鎖狀態來決定 Game.js 中顯示哪些花
 const ALL_GAME_FLOWER_ICONS = {
-    "九重葛": "/flower/九重葛.png",
-    "木棉花": "/flower/木棉花.png",
-    "桂花": "/images/桂花.jpg", // 假設遊戲中也有桂花圖示
-    "櫻花": "/flower/櫻花.png", // 假設遊戲中也有櫻花圖示
-    "油桐花": "/flower/油桐花.png",
-    "波斯菊": "/flower/波斯菊.png", // 假設遊戲中也有波斯菊圖示
-    "牽牛花": "/flower/牽牛花.png", // 假設遊戲中也有牽牛花圖示
-    "玫瑰花": "/flower/玫瑰花.png", // 假設遊戲中也有玫瑰花圖示
-    "金雞菊": "/flower/金雞菊.png", // 假設遊戲中也有金雞菊圖示
-    "黃花風鈴木": "/flower/黃花風鈴木.png",
-    "花旗木": "/flower/花旗木.png", // 原本遊戲中就有的，確保名稱對應
-    "藍楹花": "/flower/藍楹花.png", // 原本遊戲中就有的，確保名稱對應
+    "九重葛": "/images/九重葛1.jpg",
+    "木棉花": "/images/木棉花1.jpg",
+    "桂花": "/images/桂花1.jpg",
+    "櫻花": "/images/櫻花1.jpg",
+    "油桐花": "/images/油桐花1.jpg",
+    "波斯菊": "/images/波斯菊1.jpg",
+    "牽牛花": "/images/牽牛花1.jpg",
+    "玫瑰花": "/images/玫瑰花1.jpg",
+    "金雞菊": "/images/金雞菊1.jpg",
+    "長春花": "/images/長春花1.jpg",
+    "紫花酢漿草": "/images/紫花酢漿草1.jpg",
+    "蝴蝶蘭": "/images/蝴蝶蘭1.jpg",// 原本遊戲中就有的，確保名稱對應
     // 確保這裡的鍵名 (如 "九重葛") 與 Main.js 中 flowerImages 和 customSpeechText 的鍵名一致
     // 並且路徑指向遊戲中使用的拼貼圖示
 };
