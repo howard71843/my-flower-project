@@ -3,6 +3,27 @@ import { useNavigate } from "react-router-dom";
 import html2canvas from "html2canvas";
 import "./game.css";
 
+
+
+// 🌸 所有遊戲中可能用到的花卉圖示 (名稱需與 Main.js 中的花卉名稱對應)
+// 這樣我們才能根據 Main.js 的解鎖狀態來決定 Game.js 中顯示哪些花
+const ALL_GAME_FLOWER_ICONS = {
+    "九重葛": "/flower/九重葛.png",
+    "木棉花": "/flower/木棉花.png",
+    "桂花": "/flower/桂花.png", // 假設遊戲中也有桂花圖示
+    "櫻花": "/flower/櫻花.png", // 假設遊戲中也有櫻花圖示
+    "油桐花": "/flower/油桐花.png",
+    "波斯菊": "/flower/波斯菊.png", // 假設遊戲中也有波斯菊圖示
+    "牽牛花": "/flower/牽牛花.png", // 假設遊戲中也有牽牛花圖示
+    "玫瑰花": "/flower/玫瑰花.png", // 假設遊戲中也有玫瑰花圖示
+    "金雞菊": "/flower/金雞菊.png", // 假設遊戲中也有金雞菊圖示
+    "黃花風鈴木": "/flower/黃花風鈴木.png",
+    "花旗木": "/flower/花旗木.png", // 原本遊戲中就有的，確保名稱對應
+    "藍楹花": "/flower/藍楹花.png", // 原本遊戲中就有的，確保名稱對應
+    // 確保這裡的鍵名 (如 "九重葛") 與 Main.js 中 flowerImages 和 customSpeechText 的鍵名一致
+    // 並且路徑指向遊戲中使用的拼貼圖示
+};
+
 function Game() {
   const navigate = useNavigate();
   const [selectedTemplate, setSelectedTemplate] = useState(null);
@@ -18,10 +39,11 @@ function Game() {
   const [selectedFont, setSelectedFont] = useState("cursive");  // 字體選擇的狀態
   const [textPosition, setTextPosition] = useState({ top: 240, left: 100 }); // 文字的位置
   const [draggingText, setDraggingText] = useState(false);  // 是否正在拖曳文字
-  
-
-
   const [rotateData, setRotateData] = useState(null); // 儲存旋轉操作的相關數據
+
+
+  // --- 新增：狀態，用於儲存當前使用者可用的花卉圖示路徑 ---
+  const [availableFlowerIcons, setAvailableFlowerIcons] = useState([]);
 
   const postcard = [
     "/style/style1.png",
@@ -35,6 +57,48 @@ function Game() {
     "/style/style3.png": { top: "84px",left: "68px", width: "51%",height: "50%" }
   };
 
+  // --- 步驟 1：組件載入時，讀取使用者解鎖進度並篩選可用花卉 ---
+  useEffect(() => {
+    // 從 localStorage 讀取登入時儲存的使用者名稱 (與 Main.js 一致)
+    const currentUser = localStorage.getItem('currentUser');
+
+    if (currentUser) {
+      // 構造該使用者專屬的 localStorage 鑰匙 (與 Main.js 一致)
+      const progressKey = `unlockedImages_${currentUser}`;
+      const storedUnlockedData = localStorage.getItem(progressKey);
+
+      if (storedUnlockedData) {
+        try {
+          const unlockedStatus = JSON.parse(storedUnlockedData); // e.g., {"九重葛": true, "木棉花": false, ...}
+          const iconsToShow = [];
+          for (const flowerName in unlockedStatus) {
+            // 檢查花卉是否已解鎖 (value === true)
+            // 並且該花卉名稱是否存在於 ALL_GAME_FLOWER_ICONS 的定義中
+            if (unlockedStatus[flowerName] === true && ALL_GAME_FLOWER_ICONS[flowerName]) {
+              iconsToShow.push(ALL_GAME_FLOWER_ICONS[flowerName]);
+            }
+          }
+          setAvailableFlowerIcons(iconsToShow);
+          console.log(`🎨 為使用者 ${currentUser} 載入 ${iconsToShow.length} 個已解鎖的花卉圖示到遊戲中。`);
+        } catch (e) {
+          console.error("❌ 解析遊戲中花卉解鎖進度失敗:", e);
+          setAvailableFlowerIcons([]); // 解析失敗則不顯示任何花卉
+        }
+      } else {
+        console.log(`ℹ️ 遊戲：找不到使用者 ${currentUser} 的花卉解鎖進度，將不顯示任何可選花卉。`);
+        setAvailableFlowerIcons([]);
+      }
+    } else {
+      console.warn("⚠️ 遊戲：在 localStorage 中找不到登入使用者，無法載入個人化花卉。");
+      setAvailableFlowerIcons([]); // 沒有使用者資訊，不顯示任何花卉
+      // 你可以選擇是否提示使用者或導回登入
+      // alert("請先登入以使用個人化花卉。");
+      // navigate('/');
+    }
+    // 這個 effect 只在組件掛載時執行一次
+  }, [navigate]); // navigate 加入依賴是好習慣，雖然此處影響不大
+
+  
   const handleTemplateClick = (template) => {
     setSelectedTemplate(template);
     setInsertedPhoto(null);
@@ -755,28 +819,26 @@ const triggerDownload = (canvas) => {
       </div>
     )}
 
-      {/* 第三步花卉選擇列 */ }
+      {/* --- 修改：第三步花卉選擇列，使用 availableFlowerIcons --- */}
       {currentStep === 3 && (
-        <div className="white-box" ref={whiteBoxRef}>
-          <div className="flower-icons">
-            {[
-              "/flower/九重葛.png",
-              "/flower/木棉花.png",
-              "/flower/油桐花.png",
-              "/flower/花旗木.png",
-              "/flower/藍楹花.png",
-              "/flower/黃花風鈴木.png",
-            ].map((flower, index) => (
-              <img
-                key={index}
-                src={flower}
-                alt={`Flower ${index + 1}`}
-                className="flower-icon"
-                onClick={() => handleImageClick(flower)}
-                
-              />
-            ))}
-          </div>
+        <div className="flower-selection-container"> {/* Changed class name for clarity */}
+          {availableFlowerIcons.length > 0 ? (
+            <div className="flower-icons">
+              {availableFlowerIcons.map((flowerPath) => (
+                <img
+                  key={flowerPath} // 使用路徑作為 key，假設它們是唯一的
+                  src={flowerPath}
+                  alt={`花卉 ${flowerPath.substring(flowerPath.lastIndexOf('/') + 1, flowerPath.lastIndexOf('.'))}`}
+                  className="flower-icon"
+                  onClick={() => handleImageClick(flowerPath)}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="no-flowers-message">
+              您尚未在圖鑑中解鎖任何花朵，快去主頁辨識解鎖吧！
+            </p>
+          )}
         </div>
       )}
 
