@@ -10,7 +10,7 @@ import "./game.css";
 const ALL_GAME_FLOWER_ICONS = {
     "九重葛": "/flower/九重葛.png",
     "木棉花": "/flower/木棉花.png",
-    "桂花": "/flower/桂花.png", // 假設遊戲中也有桂花圖示
+    "桂花": "/images/桂花.jpg", // 假設遊戲中也有桂花圖示
     "櫻花": "/flower/櫻花.png", // 假設遊戲中也有櫻花圖示
     "油桐花": "/flower/油桐花.png",
     "波斯菊": "/flower/波斯菊.png", // 假設遊戲中也有波斯菊圖示
