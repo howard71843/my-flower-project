@@ -1040,7 +1040,7 @@ const triggerDownload = (canvas) => {
               </div>
             </div>
 
-            <button onClick={handleDownloadOrShare}>  <span style={{ fontSize: "35px" }}>⬇️</span>   </button>
+            <button onClick={handleDownloadOrShare}><span style={{ fontSize: "35px" }}>⬇️</span></button>
            
           </div>
         )}  
