@@ -44,6 +44,21 @@ function App() {
     }
   };
 
+  const handleDownloadOrShare = async () => {
+    if (!image) {
+      alert("尚未拍照或上傳圖片！");
+      return;
+    }
+  
+    const link = document.createElement("a");
+    link.href = image;  // 這是 base64 圖片
+    link.download = "captured_photo.png"; // 下載檔名可自訂
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+  
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -128,16 +143,7 @@ function App() {
           <div className="button-container">  
             <button className="back-btn" onClick={() => navigate("/main")}>🔙 </button>
             <button className="icon-btn" onClick={capturePhoto}><FontAwesomeIcon icon={faCamera} size="2x" /></button>
-            <button className="icon-btn" onClick={() => { if (!image) return;   
-              const link = document.createElement("a");
-              link.href = image;
-              link.download = "flower-capture.png";
-              link.click();
-            }}
-          >
-            ⬇️
-          </button>
-
+            <button className="icon-btn" onClick={handleDownloadOrShare} > ⬇️ </button>
           </div>
        </div>
 

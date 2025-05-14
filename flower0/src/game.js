@@ -948,7 +948,7 @@ const triggerDownload = (canvas) => {
             placeholder="請輸入祝福文字"
             value={customText}
             onChange={(e) => setCustomText(e.target.value)}
-            style={{ padding: "8px", width: "60%", borderRadius: "6px", border: "1px solid #ccc" }}
+            style={{ padding: "8px", width: "60%", borderRadius: "6px",  backgroundColor: "rgba(255,255,255,0.7)" ,border: "1px solid #ccc" }}
           />
           <select
             value={selectedFont}
@@ -1048,7 +1048,7 @@ const triggerDownload = (canvas) => {
                 // disabled={isButtonLoading}
               >
                 {/* {isButtonLoading ? "處理中..." : "⬇️ 分享或下載明信片"} */}
-                ⬇️ 分享或下載明信片
+                ⬇️ 
             </button>
           </div>
         )}

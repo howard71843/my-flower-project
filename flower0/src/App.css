@@ -86,7 +86,7 @@
 
 /* 返回按鈕 */
 .back-btn { 
-  font-size: 40px; /* Emoji 放大 */
+  font-size: 80px; /* Emoji 放大 */
   background-color: transparent; /* 移除背景色 */
   border: none; /* ✅ 移除黑框 */
 
@@ -102,7 +102,7 @@
   padding: 20px; /* 增大按鈕尺寸 */
   text-align: center;
   text-decoration: none;
-  font-size: 18px;
+  font-size: 80px; 
   cursor: pointer;
   border-radius: 50%;
   transition: background-color 0.3s ease, transform 0.2s ease;
