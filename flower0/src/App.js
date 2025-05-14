@@ -141,9 +141,9 @@ function App() {
         <div className="webcam-container">
           <Webcam ref={webcamRef} screenshotFormat="image/png" className="webcam"   videoConstraints={{ facingMode: "environment",}} />   
           <div className="button-container">  
-            <button className="back-btn" onClick={() => navigate("/main")}><span style={{ fontSize: "80px" }}>🔙</span></button>
+            <button className="back-btn" onClick={() => navigate("/main")}><span style={{ fontSize: "35px" }}>🔙</span></button>
             <button className="icon-btn" onClick={capturePhoto}><FontAwesomeIcon icon={faCamera} size="2x" /></button>
-            <button className="icon-btn" onClick={handleDownloadOrShare} > <span style={{ fontSize: "80px" }}>⬇️</span> </button>
+            <button className="icon-btn" onClick={handleDownloadOrShare} > <span style={{ fontSize: "35px" }}>⬇️</span> </button>
           </div>
        </div>
 
