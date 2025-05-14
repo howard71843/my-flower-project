@@ -1040,16 +1040,8 @@ const triggerDownload = (canvas) => {
               </div>
             </div>
 
-            <button
-                // Use the new handler function here
-                onClick={handleDownloadOrShare}
-                style={{ padding: "10px 20px", marginTop: "10px", fontSize: "16px" }}
-                // Add disabled state if you implement loading (Optional)
-                // disabled={isButtonLoading}
-              >
-                {/* {isButtonLoading ? "處理中..." : "⬇️ 分享或下載明信片"} */}
-                ⬇️ 
-            </button>
+            <button onClick={handleDownloadOrShare}>  <span style={{ fontSize: "35px" }}>⬇️</span>   </button>
+           
           </div>
         )}  
 
