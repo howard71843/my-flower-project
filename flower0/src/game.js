@@ -1051,7 +1051,7 @@ const triggerDownload = (canvas) => {
                 ⬇️ 
             </button>
           </div>
-        )}
+        )}  
 
 
 
