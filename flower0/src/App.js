@@ -143,7 +143,7 @@ function App() {
           <div className="button-container">  
             <button className="back-btn" onClick={() => navigate("/main")}><span style={{ fontSize: "80px" }}>🔙</span></button>
             <button className="icon-btn" onClick={capturePhoto}><FontAwesomeIcon icon={faCamera} size="2x" /></button>
-            <button className="icon-btn" onClick={handleDownloadOrShare} > ⬇️ </button>
+            <button className="icon-btn" onClick={handleDownloadOrShare} > <span style={{ fontSize: "80px" }}>⬇️</span> </button>
           </div>
        </div>
 
