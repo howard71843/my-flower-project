@@ -54,7 +54,7 @@ if (!influxUrl || !influxToken || !influxOrg || !influxBucket) {
 
 
 
-const API_KEY = "AIzaSyB_gq2D26iP_6aJEYd57t3AGTFzf9AZnKI"; // 請替換成你的 API Key 
+const API_KEY = "AIzaSyCjIUH4ZMJ1_9OAudULyCyw22Mn3a89Oa0"; // 請替換成你的 API Key 
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-latest:generateContent?key=${API_KEY}`;
 
 let lastMessage = ""; // 儲存最新 AI 訊息
