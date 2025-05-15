@@ -1,51 +1,23 @@
-/* src/main.css */
-
-/* 這個 body 樣式將在 /main 頁面應用，因為 camera-view-active class 不存在 */
 body {
-    background-color: #FFF9C4; /* 主頁面的背景色 */
-    /* 如果在 index.css 中已經設置了 overflow: auto，這裡通常不需要再設 */
-    /* 但如果需要特定於 main 頁面的 overflow，可以在這裡設 */
+    background-color:#FFF9C4 ;
+
 }
+
 
 .main-container {
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* justify-content: center;  移除這個，讓內容從頂部開始，可以滾動 */
-    justify-content: flex-start; /* 讓內容從頂部開始 */
-    min-height: 100vh; /* 確保容器至少和視窗一樣高，以便滾動條出現 */
+    justify-content: center;
+    min-height: 100vh;
     padding: 20px;
-    padding-bottom: 80px; /* 為底部的 .bottom-bar 留出空間，避免內容被遮擋 */
-    box-sizing: border-box; /* 確保 padding 不會增加總寬高 */
-    width: 100%; /* 讓 main-container 充滿 #root */
 }
 
-.title-container {
-    width: 100%;
-    max-width: 800px; /* 與 grid-container 一致 */
-    display: flex;
-    justify-content: space-between; /* 讓圖片和用戶信息分開 */
-    align-items: center;
-    margin-bottom: 20px; /* 調整間距 */
-    padding: 0 10px; /* 左右留白 */
-    box-sizing: border-box;
-}
-.title-image {
-    height: 50px; /* 調整圖片大小 */
-    object-fit: contain;
-}
-.user-info {
-    display: flex;
-    align-items: center;
-}
-.current-user-display {
-    margin-right: 10px;
-    font-weight: bold;
-}
+/* --- main.css --- */
 
-/* 登出按鈕基本樣式 - 藍色 (保持不變) */
+/* 登出按鈕基本樣式 - 藍色 */
 .logout-button {
-    background-color: #007bff;
+    background-color: #007bff; /* 藍色背景 */
     color: white;
     border: none;
     padding: 8px 15px;
@@ -54,61 +26,55 @@ body {
     font-weight: bold;
     text-align: center;
     cursor: pointer;
-    /* margin-left: 10px; (由 user-info 的 gap 或 current-user-display 的 margin-right 控制) */
+    margin-left: 10px;
     transition: background-color 0.2s ease-in-out, transform 0.1s ease;
     vertical-align: middle;
-}
-.logout-button:hover {
-    background-color: #0056b3;
-}
-.logout-button:active {
-    background-color: #004085;
+  }
+  
+  /* 滑鼠懸停 - 藍色 */
+  .logout-button:hover {
+    background-color: #0056b3; /* 深藍色 */
+  }
+  
+  /* 按鈕點擊 - 藍色 */
+  .logout-button:active {
+    background-color: #004085; /* 更深的藍色 */
     transform: scale(0.98);
-}
+  }
 
-/* .title class 已被 .title-container 和內部元素取代，可以考慮移除或調整用途 */
-/*
 .title {
     font-size: 24px;
     font-weight: bold;
     margin-bottom: 10px;
     text-align: center;
 }
-*/
 
 .grid-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 20px; /* 稍微加大間距 */
+    gap: 15px;
     width: 100%;
-    max-width: 800px; /* 或你希望的最大寬度 */
-    /* justify-content: center; (grid 自身會處理內容對齊) */
-    margin-bottom: 20px; /* 與 bottom-bar 的間距 */
+    max-width: 800px;
+    justify-content: center;
 }
 
 .flower-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #fff; /* 給 item 一個背景色 */
-    padding: 10px;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* 更細緻的陰影 */
 }
 
 .flower-image {
     width: 100%;
-    /* max-width: 150px; (由 grid 的 minmax 控制) */
-    aspect-ratio: 1 / 1; /* 使圖片區域為正方形 */
-    object-fit: cover; /* 裁剪圖片以填充正方形 */
+    max-width: 150px;
+    height: auto;
     border-radius: 8px;
-    /* box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1); (移到 flower-item) */
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
     cursor: pointer;
-    margin-bottom: 8px; /* 與下方文字的間距 */
 }
 
 .flower-name {
-    margin-top: 0; /* 已由 flower-image 的 margin-bottom 控制 */
+    margin-top: 8px;
     font-size: 14px;
     font-weight: bold;
     text-align: center;
@@ -116,26 +82,18 @@ body {
 
 /*下方配色*/
 .bottom-bar {
-  background-color: #ec8116;
-  width: 100%; /* 相對父容器 #root 或 body */
-  /* height: 60px; (固定高度) */
-  padding: 10px 0; /* 上下 padding，讓高度由內容決定一些 */
+  background-color: #ec8116; /* 柔和橘色背景 */
+  width: 110%;  /* 確保容器撐滿 */
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* border-radius: 8px; (通常底部條不設置圓角，除非是浮動的) */
-  box-shadow: 0px -2px 5px rgba(0, 0, 0, 0.1); /* 陰影在上方 */
-  /* margin-bottom: -20px; (這個通常用於元素重疊，這裡不需要，因為 .main-container 有 padding-bottom) */
-  position: fixed; /* 固定在底部 */
-  left: 0;
-  bottom: 0;
-  z-index: 100; /* 確保在最上層 */
-}
+  border-radius: 8px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  margin-bottom: -20px;
+  }
 
 .game {
-    font-size: 30px; /* 調整大小以適應 bottom-bar */
-    /* margin-bottom: 30px; (移除，因為 bottom-bar 的 padding 和 align-items 會處理垂直位置) */
-    margin: 0; /* 移除 h1 的預設 margin */
-    cursor: pointer;
-    color: white; /* 圖示顏色 */
+    font-size: 40px; /*放大 */
+    margin-bottom: 30px;
 }
