@@ -6,7 +6,6 @@ import Main from './main';
 import Login from './login'; // ✅ 確保組件名稱為大寫開頭
 import Game from './game';
 import reportWebVitals from './reportWebVitals';
-import AppWrapper from './AppWrapper'; // 引入新的 AppWrapper
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -18,7 +17,6 @@ root.render(
         <Route path="/main" element={<Main />} /> {/* /main 路徑顯示 Main 元件 */}
         <Route path="/" element={<Login />} /> {/* /login 路徑顯示 login 元件 */}
         <Route path="/game" element={<Game />} /> {/* /game 路徑顯示 Game 元件 */}
-        <Route path="/AppWrapper" element={ <AppWrapper />} /> {/* /game 路徑顯示 Game 元件 */}
       </Routes>
     </Router>
   </React.StrictMode>
