@@ -1,21 +1,4 @@
 
-/* main.css */
-html, body {
-    overflow: auto !important; /* 允許 main 頁面滾動 */
-    height: auto !important;   /* 讓高度根據內容自適應 */
-    background-color: #ffebcc; /* 柔和橘色背景 */
-    color: #333333;           /* 或者你 main 頁面期望的文字顏色 */
-  }
-  
-  /* 如果 main.js 的頂層容器是 .main-container */
-  .main-container {
-    /* 確保它有正常的佈局，而不是被 flex 強制 */
-    display: block; /* 或者你期望的 display 類型 */
-    padding-top: 20px; /* 示例 */
-    /* ...其他 main.js 頁面需要的佈局樣式 */
-  }
-  
-  
 
 
 .main-container {
