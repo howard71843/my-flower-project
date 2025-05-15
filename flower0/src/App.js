@@ -1,10 +1,10 @@
 import './App.css';
-import { useState, useRef, useCallback } from "react"; // Added useRef, useCallback
+import { useState, useRef, useCallback, useEffect } from "react"; // Added useEffect
 import Webcam from "react-webcam";
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCamera, faFileUpload, faHome, faRedo, faDownload } from "@fortawesome/free-solid-svg-icons"; // Added more icons
+import { faCamera, faFileUpload, faHome, faRedo, faDownload } from "@fortawesome/free-solid-svg-icons";
 
 async function base64ToBlob(base64Data) {
   const response = await fetch(base64Data);
@@ -15,11 +15,9 @@ async function base64ToBlob(base64Data) {
 }
 
 function App() {
-  // const [input, setInput] = useState(""); // Not used
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState(null); // This is KEY for switching UI modes
-  // const [result, setResult] = useState(""); // result is now mainly in popupMessage
+  const [image, setImage] = useState(null);
   const webcamRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,8 +26,27 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState("");
   const [popupType, setPopupType] = useState("");
+  const fileInputRef = useRef(null);
 
-  const fileInputRef = useRef(null); // For triggering file upload
+  // --- NEW: Effect to manage body class for camera view styling ---
+  useEffect(() => {
+    const bodyEl = document.body;
+    const htmlEl = document.documentElement; // Also target <html> for full control
+
+    if (!image) { // When in camera mode (no image preview)
+      bodyEl.classList.add('camera-view-active');
+      htmlEl.classList.add('camera-view-active'); // In case some styles target html
+    } else { // When in preview mode or any other state
+      bodyEl.classList.remove('camera-view-active');
+      htmlEl.classList.remove('camera-view-active');
+    }
+
+    // Cleanup function: remove the class when the component unmounts
+    return () => {
+      bodyEl.classList.remove('camera-view-active');
+      htmlEl.classList.remove('camera-view-active');
+    };
+  }, [image]); // Re-run this effect when the 'image' state changes
 
   const capturePhoto = useCallback(() => {
     if (webcamRef.current) {
@@ -39,7 +56,7 @@ function App() {
         alert("拍照失敗，請重試。");
         return;
       }
-      if (imageSrc.length > 3 * 1024 * 1024) {
+      if (imageSrc.length > 3 * 1024 * 1024) { // Basic size check
         alert("圖片過大，請選擇較小的解析度或壓縮圖片");
         return;
       }
@@ -108,10 +125,15 @@ function App() {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onloadend = () => {
+      if (reader.result.length > 3 * 1024 * 1024) { // Basic size check
+          alert("圖片檔案過大，請選擇較小的圖片或壓縮圖片。");
+          if (fileInputRef.current) { fileInputRef.current.value = ""; }
+          return;
+      }
       setImage(reader.result);
       setResponse("");
     };
-    if (fileInputRef.current) { // Reset file input
+    if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
   };
@@ -176,12 +198,10 @@ function App() {
           <FontAwesomeIcon icon={faHome} />
         </button>
         <h1 className="title">🌸 花間漫遊 <span className="highlight">AI</span></h1>
-         {/* Placeholder for right side if needed */}
-        <div style={{width: "40px"}}></div>
+        <div style={{width: "40px"}}></div> {/* Placeholder */}
       </div>
 
       {!image ? (
-        // STATE 1: CAMERA VIEW (Maximized)
         <div className="camera-mode-container">
           <Webcam
             ref={webcamRef}
@@ -205,12 +225,10 @@ function App() {
             <button className="overlay-action-btn capture-btn-main" onClick={capturePhoto}>
               <FontAwesomeIcon icon={faCamera} size="2x" />
             </button>
-            {/* Placeholder for symmetry or another button */}
-            <div style={{width: "50px", height: "50px"}}></div>
+            <div style={{width: "50px", height: "50px"}}></div> {/* Placeholder */}
           </div>
         </div>
       ) : (
-        // STATE 2: PREVIEW AND ANALYSIS MODE
         <div className="preview-mode-container">
           <div className="preview-top-controls">
             <button className="preview-control-btn" onClick={handleRetake}>

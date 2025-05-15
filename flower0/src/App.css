@@ -1,53 +1,55 @@
 /* App.css */
 
-/* 這些樣式只在 body 具有 camera-view-active class 時才應用 */
-body.camera-view-active {
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden !important; /* 確保相機頁面無滾動 */
-  background-color: #121212; /* 相機頁面的深色背景 */
-  color: #e0e0e0; /* 相機頁面的文字顏色 */
-  /* 確保 margin 和 padding 也被重置，以防萬一 */
-  margin: 0;
-  padding: 0;
-}
-
-/* 如果 #root 在 camera-view-active 時也需要特定樣式 */
-body.camera-view-active #root {
-  height: 100%;
-  width: 100%;
-  display: flex; /* 確保 #root 能正確填充 */
-  /* 如果之前在這裡有 overflow:hidden，確保它只針對 camera view */
-}
-
-/* 相機頁面 (App.js 渲染的內容) 的頂層包裹器 */
-.camera-page-wrapper { /* 確保在 CameraApp.js 的頂層 div 使用這個 class */
-  height: 100%;
-  width: 100%;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1; /* 如果 #root 是 flex, 讓 camera-page-wrapper 填滿 */
-}
-
-html, body, #root, .App {
+/* --- GLOBAL STYLES --- */
+/* These apply to all pages unless overridden */
+html, body, #root { /* Keep .App separate for now or combine if always full height */
   height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #ffebcc; /* 柔和橘色背景 */
-  color: #e0e0e0;
+  /* Default background and text for general pages (like Main.js) */
+  background-color: #FFF9C4; /* Light yellow like main.css body, or a neutral default */
+  color: #333; /* Dark text for light backgrounds */
+  /* overflow: hidden; <-- REMOVED FROM HERE */
 }
 
-.App {
+.App { /* Specific to the App component container */
+  height: 100%;
+  width: 100%;
   position: relative;
   display: flex;
   flex-direction: column;
+  /* If .App itself should not scroll, but its children might (e.g. preview-mode-container) */
+  /* overflow: hidden; <-- Only add this if App itself should never scroll */
 }
 
-/* --- POPUP --- */
+
+/* --- CAMERA VIEW SPECIFIC BODY STYLES --- */
+/* These styles apply ONLY when body has the 'camera-view-active' class */
+body.camera-view-active {
+  height: 100vh; /* Or 100% */
+  width: 100vw;  /* Or 100% */
+  overflow: hidden !important; /* CRITICAL: Prevents scrolling ONLY for camera view */
+  background-color: #121212; /* Dark background for camera */
+  color: #e0e0e0; /* Light text for camera */
+}
+
+/* Ensure #root and .App also fill the viewport and hide overflow when camera is active */
+body.camera-view-active #root,
+body.camera-view-active .App {
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* Important for the .App container in camera mode */
+  background-color: #121212; /* Match body background */
+}
+
+
+/* camera-page-wrapper is likely not needed if body.camera-view-active handles it */
+/* .camera-page-wrapper { ... } */
+
+
+/* --- POPUP (No changes, seems fine) --- */
 .popup {
   position: fixed;
   top: 0;
@@ -95,7 +97,7 @@ html, body, #root, .App {
   border-top: 5px solid #f44336; /* Red for fail */
 }
 
-/* --- TITLE BAR OVERLAY --- */
+/* --- TITLE BAR OVERLAY (No changes, seems fine) --- */
 .title-bar-overlay {
   position: fixed;
   top: 0;
@@ -137,12 +139,12 @@ html, body, #root, .App {
 }
 
 
-/* --- CAMERA MODE --- */
+/* --- CAMERA MODE CONTAINER (No changes, styles are for content within App) --- */
 .camera-mode-container {
   width: 100%;
-  height: 100%; /* Full viewport height */
+  height: 100%; /* Full viewport height (relative to .App) */
   position: relative;
-  background-color: #000;
+  /* background-color: #000; /* This will be handled by body.camera-view-active .App now */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -153,25 +155,25 @@ html, body, #root, .App {
 .webcam-maximized {
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Fill container, may crop to maintain aspect ratio */
+  object-fit: cover;
   display: block;
 }
 
 .controls-overlay-bottom {
   position: absolute;
-  bottom: 0; /* At the very bottom */
+  bottom: 0;
   left: 0;
   width: 100%;
-  padding: 20px 0; /* Vertical padding */
+  padding: 20px 0;
   display: flex;
-  justify-content: space-around; /* Distribute buttons */
+  justify-content: space-around;
   align-items: center;
-  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%); /* Fade to transparent */
+  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
   z-index: 50;
 }
 
 .overlay-action-btn {
-  background-color: rgba(255, 255, 255, 0.2); /* Translucent white */
+  background-color: rgba(255, 255, 255, 0.2);
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
@@ -190,7 +192,7 @@ html, body, #root, .App {
 .overlay-action-btn:active {
   transform: scale(0.92);
 }
-.capture-btn-main { /* Larger main capture button */
+.capture-btn-main {
   width: 70px;
   height: 70px;
   background-color: rgba(255, 255, 255, 0.9);
@@ -202,18 +204,18 @@ html, body, #root, .App {
 }
 
 
-/* --- PREVIEW AND ANALYSIS MODE --- */
+/* --- PREVIEW AND ANALYSIS MODE (No changes, styles for content within App) --- */
 .preview-mode-container {
   width: 100%;
-  height: 100%;
+  height: 100%; /* Relative to .App */
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-start;
-  padding: 75px 15px 20px 15px; /* Top padding for title + controls, bottom padding */
+  justify-content: flex-start; /* Changed to flex-start to allow potential scroll */
+  padding: 75px 15px 20px 15px;
   box-sizing: border-box;
-  overflow-y: auto;
-  background-color: #1e1e1e; /* Slightly lighter dark for preview */
+  overflow-y: auto; /* This container can scroll if its content is too large */
+  background-color: #1e1e1e;
 }
 
 .preview-top-controls {
@@ -222,11 +224,11 @@ html, body, #root, .App {
   gap: 15px;
   margin-bottom: 20px;
   width: 100%;
-  max-width: 400px; /* Limit width of control group */
+  max-width: 400px;
 }
 
 .preview-control-btn {
-  flex-grow: 1; /* Make buttons take equal space */
+  flex-grow: 1;
   padding: 10px 15px;
   font-size: 0.95em;
   background-color: #333;
@@ -237,7 +239,7 @@ html, body, #root, .App {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* Space between icon and text */
+  gap: 8px;
   transition: background-color 0.2s;
 }
 .preview-control-btn:hover:not(:disabled) {
@@ -250,8 +252,8 @@ html, body, #root, .App {
 
 .image-preview-maximized {
   width: 100%;
-  max-width: 500px; /* Max width for the image */
-  max-height: 55vh; /* Max height relative to viewport */
+  max-width: 500px;
+  max-height: 55vh;
   object-fit: contain;
   border-radius: 12px;
   box-shadow: 0 5px 20px rgba(0,0,0,0.4);
@@ -266,7 +268,7 @@ html, body, #root, .App {
   background-color: #007bff;
   color: white;
   border: none;
-  border-radius: 25px; /* Pill shape */
+  border-radius: 25px;
   cursor: pointer;
   margin-bottom: 25px;
   transition: background-color 0.2s, transform 0.1s;
@@ -293,6 +295,7 @@ html, body, #root, .App {
   text-align: center;
   color: #ccc;
   box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  margin-bottom: 20px; /* Added margin for scroll spacing */
 }
 .response-text-preview {
   font-size: 1em;
