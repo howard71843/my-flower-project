@@ -3,8 +3,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 
 // 假設你的頁面組件路徑如下，請根據你的實際情況修改
-import Main from './components/Main.js';      // 你的 main.js
-import CameraApp from './components/App.js';   // 這是你的相機頁面組件 (原來的 App.js)
+import Main from './main.js';           // ✅ Main.js 直接在 src/ 下
+import CameraApp from './App.js';        // ✅ CameraApp (原 App.js) 直接在 src/ 下
 import Login from './components/Login.js';    // 假設的登入頁面
 // import Game from './components/Game.js'; // 如果你有 Game 頁面
 
