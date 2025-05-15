@@ -6,7 +6,7 @@ html, body, #root, .App {
   padding: 0;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  background-color: #121212; /* Dark theme background */
+  background-color: #ffebcc; /* 柔和橘色背景 */
   color: #e0e0e0;
 }
 
