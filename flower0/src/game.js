@@ -37,6 +37,8 @@ function Game() {
   const [textPosition, setTextPosition] = useState({ top: 240, left: 100 }); // 文字的位置
   const [draggingText, setDraggingText] = useState(false);  // 是否正在拖曳文字
   const [rotateData, setRotateData] = useState(null); // 儲存旋轉操作的相關數據
+  const [isUploading, setIsUploading] = useState(false);  // 增加 isUploading state
+  const [uploadProgress, setUploadProgress] = useState(0);  // 增加 uploadProgress state
 
 
   // --- 新增：狀態，用於儲存當前使用者可用的花卉圖示路徑 ---
@@ -488,6 +490,10 @@ useEffect(() => {
   }
 
   try {
+    // 1. 建立 canvas 和 base64 圖片資料
+    setIsUploading(true);  // 啟動上傳時，設置 loading 狀態為 true
+    setUploadProgress(0);   // 重置進度條
+
     // Add a temporary loading indicator maybe? (Optional)
     // e.g., setButtonLoading(true);
 
@@ -498,6 +504,41 @@ useEffect(() => {
       // scale: window.devicePixelRatio || 1, // Capture at device resolution
     });
 
+    const base64Image = canvas.toDataURL("image/png");
+     // 2. 獲取使用者資訊和 JWT (從 localStorage 獲取)
+     const token = localStorage.getItem('token'); // 獲取 JWT token
+     const currentUser = localStorage.getItem('currentUser'); // 獲取使用者名稱
+     const userId = currentUser; //  **不安全的** (僅供範例使用，請從已驗證的使用者 session 獲取)
+
+     if (!userId || !token) {
+         alert("請先登入再儲存明信片。");
+         return;
+     }
+
+     // 3. 建立上傳資料物件
+     const uploadData = {
+      image: base64Image,
+      userId: userId,
+      templateId: selectedTemplate, // 可選：模板 ID
+  };
+
+  // 4.  呼叫後端 API
+  const response = await fetch('/api/upload-postcard', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        //  **重要：加入 JWT token**
+        'Authorization': `Bearer ${token}`  // 在 Authorization 標頭中加入 JWT
+    },
+    body: JSON.stringify(uploadData),
+});
+
+if (!response.ok) {
+    const errorData = await response.json();
+    console.error('明信片上傳失敗:', errorData);
+    alert(`上傳失敗: ${errorData.message || '未知錯誤'}`);
+    return;
+}
     // --- Attempt to use Web Share API first ---
     // Check if both share and canShare are supported
     if (navigator.share && navigator.canShare) {
@@ -550,6 +591,9 @@ useEffect(() => {
       // --- Fallback to standard download link method ---
       console.log("Web Share API 不支援，使用傳統下載。");
       triggerDownload(canvas);
+      const data = await response.json();
+      console.log('明信片上傳成功:', data);
+      alert('明信片已成功儲存！');
       // Reset loading indicator here if needed
       // e.g., setButtonLoading(false);
     }
@@ -967,6 +1011,16 @@ const triggerDownload = (canvas) => {
         {currentStep === 5 && (
           <div style={{ textAlign: "center" }}>
             <h2>🎉 明信片完成！</h2>
+              {/* 顯示Loading效果 (根據 isUploading 狀態) */}
+        {isUploading ? (
+          <div style={{ marginTop: '20px' }}>
+            <p>正在上傳中...</p>
+            {/* **新增：進度條顯示 (如果有)**  (使用內建的或者第三方套件) */}
+            {/*  例如：<progress value={uploadProgress} max="100"></progress> */}
+            <div className="loading-spinner"></div>
+          </div>
+        ) : (
+          <>
             <div
               id="final-card"
               style={{
@@ -1038,7 +1092,8 @@ const triggerDownload = (canvas) => {
             </div>
 
             <button onClick={handleDownloadOrShare}><span style={{ fontSize: "35px" }}>⬇️</span></button>
-           
+            </>
+        )}
           </div>
         )}  
 
