@@ -1,15 +1,7 @@
 var express = require("express");
 var router = express.Router();
 const { InfluxDB, Point } = require('@influxdata/influxdb-client'); // 引入 InfluxDB client
-const fs = require('fs');  // new
-const path = require('path'); // new
-const jwt = require('jsonwebtoken'); // new
 
-//  new 圖片儲存目錄 (請根據你的伺服器配置修改)
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir);
-}
 
 
 // --- InfluxDB Configuration ---
@@ -210,119 +202,5 @@ process.on('SIGINT', () => {
 });
   
 
-
-// **重要： JWT 密鑰 (請使用環境變數儲存)**
-const jwtSecret = process.env.JWT_SECRET || '871208'; // 請妥善保管這個密鑰，不要洩漏
-
-
-// 驗證 JWT 中間件
-function authenticateToken(req, res, next) {
-    const authHeader = req.headers['authorization']; // 取得 "Authorization" 標頭
-    const token = authHeader && authHeader.split(' ')[1]; // 從 "Bearer <token>" 取得 token
-
-    if (token == null) {
-        console.log("Token 缺失");
-        return res.status(401).json({ message: '缺少 Token' }); // 401 Unauthorized
-    }
-
-    jwt.verify(token, jwtSecret, (err, user) => {
-        if (err) {
-            console.error("Token 無效:", err);
-            return res.status(403).json({ message: 'Token 無效' });  // 403 Forbidden
-        }
-
-        req.user = { userId: user.userId, username: user.username }; //  將使用者資訊儲存在 request 物件中
-        next();
-    });
-}
-
-
-//  上傳明信片 API (POST /api/upload-postcard) - 需要身份驗證
-router.post('/api/upload-postcard', authenticateToken, async (req, res) => {
-    try {
-        const { image, templateId } = req.body;
-        const userId = req.user.userId; // 從已驗證的 token 中獲取使用者 ID
-
-        if (!image || !userId) {
-            return res.status(400).json({ message: '缺少必要的資料' });
-        }
-
-        if (!image.startsWith('data:image/png;base64,')) {
-            return res.status(400).json({ message: '無效的圖片格式' });
-        }
-
-        const base64Data = image.replace(/^data:image\/png;base64,/, '');
-        const imageName = `${Date.now()}-${userId}.png`;
-        const imagePath = path.join(uploadDir, imageName);
-
-        // 1. 儲存圖片檔案
-        await new Promise((resolve, reject) => {
-            fs.writeFile(imagePath, base64Data, 'base64', (err) => {
-                if (err) {
-                    console.error("檔案寫入錯誤:", err);
-                    reject(err);
-                } else {
-                    resolve();
-                }
-            });
-        });
-
-        // 2. 建立 InfluxDB Point (db table)
-        const point = new Point('postcard_uploads')
-            .tag('user_id', userId)
-            .tag('template_id', templateId || 'none')
-            .stringField('image_path', `/uploads/${imageName}`)
-            .timestamp(new Date());
-
-        // 3. 寫入 InfluxDB
-        if (writeApi) {
-            writeApi.writePoint(point);
-            await writeApi.flush();
-            console.log('✅ 明信片資訊已寫入 InfluxDB');
-        } else {
-            console.warn('⚠️ InfluxDB Write API 未初始化，無法寫入資料。');
-        }
-
-        res.status(201).json({
-            message: '明信片已成功儲存',
-            imagePath: `/uploads/${imageName}`,
-        });
-
-    } catch (error) {
-        console.error('上傳明信片 API 錯誤:', error);
-        res.status(500).json({ message: '伺服器錯誤', error: error.message });
-    }
-});
-
-//  **範例： 登入 API (POST /api/login)**
-//  **請根據你的需求調整身份驗證邏輯**
-router.post('/api/login', (req, res) => {
-    const { username, password } = req.body;
-
-    //  **1. 驗證使用者名稱和密碼 (請根據你的資料庫進行驗證)**
-    //  **這個範例僅供參考，你需要根據你的資料庫驗證方式進行調整**
-    if (username === 'testuser' ) {
-        //  **2. 建立 JWT**
-        const user = { userId: 'some-user-id', username: username }; //  你的使用者資訊
-        const token = jwt.sign(user, jwtSecret, { expiresIn: '1h' }); //  設定 token 的有效時間
-
-        res.json({
-            message: '登入成功',
-            token: token,  //  將 token 回傳給前端
-            user: { username: username } //  將使用者名稱回傳給前端
-        });
-    } else {
-        res.status(401).json({ message: '登入失敗' });
-    }
-});
-
-
-//  **範例： 獲取使用者資訊 API (GET /api/userinfo) - 需要身份驗證**
-router.get('/api/userinfo', authenticateToken, (req, res) => {
-    res.json({
-        username: req.user.username, // 從 req.user 中獲取使用者資訊
-        userId: req.user.userId,
-    });
-});
 
 module.exports = router;
