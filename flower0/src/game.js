@@ -56,6 +56,50 @@ function Game() {
     "/style/style3.png": { top: "84px",left: "68px", width: "51%",height: "50%" }
   };
 
+  //  **新增： 用來儲存使用者資訊的狀態變數**
+const [userInfo, setUserInfo] = useState(null);
+
+// --- 步驟 1： 組件載入時，檢查登入狀態 (改進) ---
+useEffect(() => {
+  const checkLoginStatus = async () => {
+      const token = localStorage.getItem('token'); //  獲取 JWT token
+
+      if (token) {
+          try {
+              const response = await fetch('/api/userinfo', { //  呼叫 /api/userinfo
+                  method: 'GET',
+                  headers: {
+                      'Authorization': `Bearer ${token}`,  // 傳送 token
+                      'Content-Type': 'application/json'
+                  },
+              });
+
+              if (response.ok) {
+                  const data = await response.json();
+                  console.log("✅ 使用者資訊 (從 /api/userinfo):", data);
+                  setUserInfo(data);  //  設定使用者資訊
+              } else {
+                  console.error("❌  獲取使用者資訊失敗 (從 /api/userinfo)");
+                  localStorage.removeItem('token');  // 清除 token
+              }
+          } catch (error) {
+              console.error("❌  獲取使用者資訊時發生錯誤:", error);
+              localStorage.removeItem('token');  // 清除 token
+          }
+      }
+  };
+  checkLoginStatus();  // 在元件載入時呼叫
+}, []);  //  **重要： 空的依賴陣列，表示只在元件掛載時執行**
+
+
+
+
+
+
+
+
+
+
   // --- 步驟 1：組件載入時，讀取使用者解鎖進度並篩選可用花卉 ---
   useEffect(() => {
     // 從 localStorage 讀取登入時儲存的使用者名稱 (與 Main.js 一致)
