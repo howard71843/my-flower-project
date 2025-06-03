@@ -40,6 +40,10 @@ function Game() {
   const [isUploading, setIsUploading] = useState(false);  // 增加 isUploading state
   const [uploadProgress, setUploadProgress] = useState(0);  // 增加 uploadProgress state
 
+    //  **新增： 用來儲存使用者資訊的狀態變數**
+    const [userInfo, setUserInfo] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);  //  新增： 用來儲存是否登入的狀態
+
 
   // --- 新增：狀態，用於儲存當前使用者可用的花卉圖示路徑 ---
   const [availableFlowerIcons, setAvailableFlowerIcons] = useState([]);
@@ -56,8 +60,6 @@ function Game() {
     "/style/style3.png": { top: "84px",left: "68px", width: "51%",height: "50%" }
   };
 
-  //  **新增： 用來儲存使用者資訊的狀態變數**
-const [userInfo, setUserInfo] = useState(null);
 
 // --- 步驟 1： 組件載入時，檢查登入狀態 (改進) ---
 useEffect(() => {
@@ -78,15 +80,21 @@ useEffect(() => {
                   const data = await response.json();
                   console.log("✅ 使用者資訊 (從 /api/userinfo):", data);
                   setUserInfo(data);  //  設定使用者資訊
+                  setIsLoggedIn(true);  //  設定登入狀態為 true
               } else {
                   console.error("❌  獲取使用者資訊失敗 (從 /api/userinfo)");
                   localStorage.removeItem('token');  // 清除 token
+                  setIsLoggedIn(false);  //  設定登入狀態為 false
               }
           } catch (error) {
               console.error("❌  獲取使用者資訊時發生錯誤:", error);
               localStorage.removeItem('token');  // 清除 token
+              setIsLoggedIn(false);  //  設定登入狀態為 false
           }
       }
+      else {
+        setIsLoggedIn(false); //  如果没有token，设定登入状态为false
+    }
   };
   checkLoginStatus();  // 在元件載入時呼叫
 }, []);  //  **重要： 空的依賴陣列，表示只在元件掛載時執行**
@@ -97,16 +105,10 @@ useEffect(() => {
 
 
 
-
-
-
   // --- 步驟 1：組件載入時，讀取使用者解鎖進度並篩選可用花卉 ---
   useEffect(() => {
-    // 從 localStorage 讀取登入時儲存的使用者名稱 (與 Main.js 一致)
-    const currentUser = localStorage.getItem('currentUser');
-
-    if (currentUser) {
-      // 構造該使用者專屬的 localStorage 鑰匙 (與 Main.js 一致)
+    if (userInfo) {
+      const currentUser = userInfo.username; // 从 userInfo 获取用户名.  **重要: 使用 user.username, 不是 user.userId, 因为之前设定 token 的 payload 是  { userId: user.id, username: username }**
       const progressKey = `unlockedImages_${currentUser}`;
       const storedUnlockedData = localStorage.getItem(progressKey);
 
@@ -526,129 +528,76 @@ useEffect(() => {
   }, [draggingText]);
 
   const handleDownloadOrShare = async () => {
-  const finalCardElement = document.getElementById("final-card");
-  if (!finalCardElement) {
-    console.error("Final card element not found");
-    alert("無法找到明信片元素，下載失敗。");
-    return;
-  }
-
-  try {
-    // 1. 建立 canvas 和 base64 圖片資料
-    setIsUploading(true);  // 啟動上傳時，設置 loading 狀態為 true
-    setUploadProgress(0);   // 重置進度條
-
-    // Add a temporary loading indicator maybe? (Optional)
-    // e.g., setButtonLoading(true);
-
-    const canvas = await html2canvas(finalCardElement, {
-      // Options to potentially improve quality or handle rendering issues
-      useCORS: true, // Important if images are from other origins
-      allowTaint: true, // May be needed depending on image sources
-      // scale: window.devicePixelRatio || 1, // Capture at device resolution
-    });
-
-    const base64Image = canvas.toDataURL("image/png");
-     // 2. 獲取使用者資訊和 JWT (從 localStorage 獲取)
-     const token = localStorage.getItem('token'); // 獲取 JWT token
-     const currentUser = localStorage.getItem('currentUser'); // 獲取使用者名稱
-     const userId = currentUser; //  **不安全的** (僅供範例使用，請從已驗證的使用者 session 獲取)
-
-     if (!userId || !token) {
-         alert("請先登入再儲存明信片。");
-         return;
-     }
-
-     // 3. 建立上傳資料物件
-     const uploadData = {
-      image: base64Image,
-      userId: userId,
-      templateId: selectedTemplate, // 可選：模板 ID
-  };
-
-  // 4.  呼叫後端 API
-  const response = await fetch('/api/upload-postcard', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-        //  **重要：加入 JWT token**
-        'Authorization': `Bearer ${token}`  // 在 Authorization 標頭中加入 JWT
-    },
-    body: JSON.stringify(uploadData),
-});
-
-if (!response.ok) {
-    const errorData = await response.json();
-    console.error('明信片上傳失敗:', errorData);
-    alert(`上傳失敗: ${errorData.message || '未知錯誤'}`);
-    return;
-}
-    // --- Attempt to use Web Share API first ---
-    // Check if both share and canShare are supported
-    if (navigator.share && navigator.canShare) {
-      // canvas.toBlob is asynchronous, returns a Promise or uses a callback
-      canvas.toBlob(async (blob) => {
-        if (!blob) {
-          console.error("Canvas to Blob conversion failed.");
-          alert("圖片轉換失敗，請使用傳統下載方式。");
-          // Fallback to download link if blob creation fails
-          triggerDownload(canvas);
-          return;
+        const finalCardElement = document.getElementById("final-card");
+        if (!finalCardElement) {
+            console.error("Final card element not found");
+            alert("無法找到明信片元素，下載失敗。");
+            return;
         }
 
-        const file = new File([blob], "postcard.png", { type: "image/png" });
-        const shareData = {
-          files: [file],
-          title: "我的花間漫遊明信片", // Optional: Title for the share sheet
-          text: "看看我製作的明信片！", // Optional: Text accompanying the share
-        };
+        if (!isLoggedIn) {  //  **重要： 檢查使用者是否已登入**
+            alert("請先登入再儲存明信片。");
+            return;
+        }
 
-        // Check if the browser thinks it CAN share this specific data
-        if (navigator.canShare(shareData)) {
-          try {
-            await navigator.share(shareData);
-            console.log("圖片分享成功！");
-            // Optional: Show a success message to the user
-          } catch (error) {
-            // Handle errors (e.g., user cancels the share sheet)
-            // AbortError is common if the user cancels
-            if (error.name !== 'AbortError') {
-              console.error("分享失敗:", error);
-              alert(`分享失敗：${error.message}\n\n將嘗試使用傳統下載方式。`);
-              // Fallback to download if sharing fails for other reasons
-              triggerDownload(canvas);
-            } else {
-              console.log("使用者取消分享。");
+        try {
+            // 1. 建立 canvas 和 base64 圖片資料
+            setIsUploading(true);  // 啟動上傳時，設置 loading 狀態為 true
+            setUploadProgress(0);   // 重置進度條
+
+            const canvas = await html2canvas(finalCardElement, {
+                useCORS: true,  // 跨域請求
+                allowTaint: true,
+            });
+
+            const base64Image = canvas.toDataURL("image/png");
+
+            // 2. 建立上傳資料物件
+            const uploadData = {
+                image: base64Image,
+                userId: userInfo.userId,  // **使用从 /api/userinfo 获得的 userId**
+                templateId: selectedTemplate,
+            };
+
+            // 4.  呼叫後端 API
+            const token = localStorage.getItem('token'); //  獲取 JWT token
+            if (!token) {
+                alert("Token 缺失，請重新登入。");
+                return;
             }
-          }
-        } else {
-          // If canShare returns false for the specific data
-          console.log("瀏覽器無法分享此檔案類型，使用傳統下載。");
-          triggerDownload(canvas);
+
+            const response = await fetch('/api/upload-postcard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    //  **重要：加入 JWT token**
+                    'Authorization': `Bearer ${token}`,  // 在 Authorization 標頭中加入 JWT
+                },
+                body: JSON.stringify(uploadData),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error('明信片上傳失敗:', errorData);
+                alert(`上傳失敗: ${errorData.message || '未知錯誤'}`);
+            } else {
+                const data = await response.json();
+                console.log('明信片上傳成功:', data);
+                alert('明信片已成功儲存！');
+                //  **新增：如果成功，重置拼貼狀態 (可選)**
+                setSelectedImages([]);   // 清空拼貼圖片
+                setInsertedPhoto(null); // 清空插入的照片
+                triggerDownload(canvas); // 保持原有的下載功能
+            }
+        } catch (error) {
+            console.error("截圖或處理過程中發生錯誤:", error);
+            alert(`產生明信片圖片時發生錯誤：${error.message}`);
+        } finally {
+            setIsUploading(false); //  無論成功或失敗，都關閉 loading
+            
         }
-        // Reset loading indicator here if needed
-        // e.g., setButtonLoading(false);
-
-      }, "image/png"); // Specify blob type
-
-    } else {
-      // --- Fallback to standard download link method ---
-      console.log("Web Share API 不支援，使用傳統下載。");
-      triggerDownload(canvas);
-      const data = await response.json();
-      console.log('明信片上傳成功:', data);
-      alert('明信片已成功儲存！');
-      // Reset loading indicator here if needed
-      // e.g., setButtonLoading(false);
-    }
-
-  } catch (error) {
-    console.error("截圖或處理過程中發生錯誤:", error);
-    alert(`產生明信片圖片時發生錯誤：${error.message}`);
-    // Reset loading indicator here if needed
-    // e.g., setButtonLoading(false);
-  }
-};
+       
+    };
 
 // Helper function for the traditional download method
 const triggerDownload = (canvas) => {
