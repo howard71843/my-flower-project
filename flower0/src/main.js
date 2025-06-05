@@ -12,7 +12,7 @@ const flowerImages = {
     "向日葵": "/images/向日葵.jpg",
     "康乃馨": "/images/康乃馨.jpg",
     "洋桔梗": "/images/洋桔梗.jpg",
-    "石斛蘭": "/images/石斛蘭.jpg",
+    "蘭花": "/images/石斛蘭.jpg",
     "菊花": "/images/菊花.jpg",
 };
 
