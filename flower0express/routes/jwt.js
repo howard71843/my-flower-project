@@ -1,4 +1,4 @@
-// jwt.js
+// jwt.js (用不到)
 const jwt = require('jsonwebtoken');
 const jwtSecret = process.env.JWT_SECRET || '871208'; //  請從環境變數中獲取
 

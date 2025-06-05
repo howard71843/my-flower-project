@@ -198,6 +198,7 @@ body.camera-view-active .App {
   background-color: rgba(255, 255, 255, 0.9);
   color: #333;
   border: 2px solid white;
+  margin-bottom: 20px;
 }
 .capture-btn-main:hover {
   background-color: white;
