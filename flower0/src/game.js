@@ -9,9 +9,9 @@ import "./game.css";
 // 這樣我們才能根據 Main.js 的解鎖狀態來決定 Game.js 中顯示哪些花
 const ALL_GAME_FLOWER_ICONS = {
     "向日葵": "/images/向日葵1.png",
-    "康乃馨": "/images/康乃馨1.png",
+    "紅掌": "/images/紅掌1.png",
     "洋桔梗": "/images/洋桔梗1.png",
-    "蘭花": "/images/石斛蘭1.png",
+    "文心蘭": "/images/文心蘭1.png",
     "菊花": "/images/菊花1.png",
     "玫瑰": "/images/玫瑰花1.png",
     "長春花": "/images/長春花1.png",
